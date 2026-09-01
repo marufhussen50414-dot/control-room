@@ -32,7 +32,7 @@ import {
 } from '@/lib/mock-data';
 import { OWNER_CONFIG } from '@/src/config/ownerConfig';
 
-const STORAGE_KEY = 'gamehaatbd_control_room_v1';
+const STORAGE_KEY = 'gamehaatbd_control_room_v2';
 const SESSION_KEY = 'gamehaatbd_session_user_id';
 
 type DBShape = {
@@ -77,13 +77,24 @@ function loadDB(): DBShape {
       return db;
     }
     const parsed = JSON.parse(raw) as Partial<DBShape>;
-    // Migrate older saved sessions that predate the reports feature.
+    // Migrate/guard against older saved sessions with an incompatible shape
+    // (e.g. disputes without `attachments`, or missing `reports` entirely).
     const fresh = freshDB();
+    const disputesValid =
+      Array.isArray(parsed.disputes) &&
+      parsed.disputes.every(
+        (d) => Array.isArray(d?.attachments) && Array.isArray(d?.messages)
+      );
+    const reportsValid =
+      Array.isArray(parsed.reports) &&
+      parsed.reports.every(
+        (r) => Array.isArray(r?.attachments) && Array.isArray(r?.messages)
+      );
     return {
       ...fresh,
       ...parsed,
-      reports: parsed.reports ?? fresh.reports,
-      disputes: parsed.disputes ?? fresh.disputes,
+      disputes: disputesValid ? parsed.disputes! : fresh.disputes,
+      reports: reportsValid ? parsed.reports! : fresh.reports,
     };
   } catch {
     return freshDB();
