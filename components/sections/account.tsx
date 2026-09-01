@@ -92,16 +92,11 @@ export function AccountSettings() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Display Name</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={currentUser.role === 'owner'}
-              />
-              {currentUser.role === 'owner' && (
-                <p className="text-xs text-muted-foreground">
-                  Owner display name is managed at first login.
-                </p>
-              )}
+              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <p className="text-xs text-muted-foreground">
+                This is set the first time you log in, and you can change it
+                here anytime afterward.
+              </p>
             </div>
             <div className="space-y-2">
               <Label>Email</Label>
