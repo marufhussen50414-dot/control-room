@@ -56,23 +56,65 @@ export type Order = {
   createdAt: string;
 };
 
+export type ChatChannel = 'group' | 'buyer' | 'seller';
+
 export type DisputeMessage = {
   id: string;
   author: 'buyer' | 'seller' | 'admin';
   authorName: string;
   text: string;
   at: string;
+  channel: ChatChannel;
+};
+
+export type Attachment = {
+  id: string;
+  kind: 'recording' | 'image' | 'file';
+  label: string;
+  url: string;
+  durationSec?: number;
+  uploadedBy: 'buyer' | 'seller';
 };
 
 export type Dispute = {
   orderId: number;
   buyerEmail: string;
+  buyerName: string;
   sellerEmail: string;
+  sellerName: string;
+  accountTitle: string;
+  amount: number;
+  reason: string;
   buyerEvidence: string;
   sellerEvidence: string;
   credentials: string;
+  attachments: Attachment[];
   messages: DisputeMessage[];
   status: 'open' | 'resolved_release' | 'resolved_refund';
+  createdAt: string;
+};
+
+export type ReportCategory =
+  | 'scam'
+  | 'fake_listing'
+  | 'abusive_behavior'
+  | 'account_recovered'
+  | 'other';
+
+export type Report = {
+  id: string;
+  orderId?: number;
+  reportedBy: 'buyer' | 'seller';
+  buyerEmail: string;
+  buyerName: string;
+  sellerEmail: string;
+  sellerName: string;
+  category: ReportCategory;
+  description: string;
+  attachments: Attachment[];
+  messages: DisputeMessage[];
+  status: 'open' | 'resolved_warning' | 'resolved_banned' | 'dismissed';
+  createdAt: string;
 };
 
 export type PayoutRequest = {

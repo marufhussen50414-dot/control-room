@@ -4,6 +4,7 @@ import * as React from 'react';
 import { toast } from 'sonner';
 import type {
   AuditEntry,
+  ChatChannel,
   Dispute,
   DisputeMessage,
   Order,
@@ -11,6 +12,7 @@ import type {
   PayoutRequest,
   Permissions,
   PlatformSettings,
+  Report,
   Role,
   User,
 } from '@/lib/types';
@@ -25,6 +27,7 @@ import {
   seedOwner,
   seedOperators,
   seedPayouts,
+  seedReports,
   seedSettings,
 } from '@/lib/mock-data';
 import { OWNER_CONFIG } from '@/src/config/ownerConfig';
@@ -36,6 +39,7 @@ type DBShape = {
   users: User[];
   orders: Order[];
   disputes: Dispute[];
+  reports: Report[];
   payouts: PayoutRequest[];
   audit: AuditEntry[];
   settings: PlatformSettings;
@@ -49,6 +53,7 @@ function freshDB(): DBShape {
     users: [seedOwner(), seedAdmin(), ...seedOperators()],
     orders: seedOrders(),
     disputes: seedDisputes(),
+    reports: seedReports(),
     payouts: seedPayouts(),
     audit: seedAudit(),
     settings: seedSettings(),
@@ -71,7 +76,15 @@ function loadDB(): DBShape {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
       return db;
     }
-    return JSON.parse(raw) as DBShape;
+    const parsed = JSON.parse(raw) as Partial<DBShape>;
+    // Migrate older saved sessions that predate the reports feature.
+    const fresh = freshDB();
+    return {
+      ...fresh,
+      ...parsed,
+      reports: parsed.reports ?? fresh.reports,
+      disputes: parsed.disputes ?? fresh.disputes,
+    };
   } catch {
     return freshDB();
   }
@@ -109,8 +122,13 @@ type AppContextType = {
   updateOrderStatus: (id: number, status: OrderStatus) => void;
   releaseEscrow: (id: number) => void;
   extendEscrow: (id: number, hours: number) => void;
-  addDisputeMessage: (orderId: number, text: string) => void;
+  addDisputeMessage: (orderId: number, text: string, channel: ChatChannel) => void;
   resolveDispute: (orderId: number, verdict: 'release' | 'refund') => void;
+  addReportMessage: (reportId: string, text: string, channel: ChatChannel) => void;
+  resolveReport: (
+    reportId: string,
+    verdict: 'warning' | 'banned' | 'dismissed'
+  ) => void;
   approvePayout: (id: number, trxId: string) => void;
   rejectPayout: (id: number) => void;
   setFeePercent: (n: number) => void;
@@ -328,7 +346,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
 
   const addDisputeMessage = React.useCallback(
-    (orderId: number, text: string) => {
+    (orderId: number, text: string, channel: ChatChannel) => {
       if (!currentUser || !text.trim()) return;
       const msg: DisputeMessage = {
         id: uid(),
@@ -336,6 +354,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         authorName: currentUser.name,
         text: text.trim(),
         at: new Date().toISOString(),
+        channel,
       };
       const next = {
         ...db,
@@ -346,9 +365,55 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ),
       };
       persist(next);
-      log(`Sent message on Dispute #${orderId}`, currentUser, next);
+      log(`Sent ${channel} message on Dispute #${orderId}`, currentUser, next);
     },
     [db, currentUser, persist, log]
+  );
+
+  const addReportMessage = React.useCallback(
+    (reportId: string, text: string, channel: ChatChannel) => {
+      if (!currentUser || !text.trim()) return;
+      const msg: DisputeMessage = {
+        id: uid(),
+        author: 'admin',
+        authorName: currentUser.name,
+        text: text.trim(),
+        at: new Date().toISOString(),
+        channel,
+      };
+      const next = {
+        ...db,
+        reports: db.reports.map((r) =>
+          r.id === reportId ? { ...r, messages: [...r.messages, msg] } : r
+        ),
+      };
+      persist(next);
+      log(`Sent ${channel} message on Report ${reportId}`, currentUser, next);
+    },
+    [db, currentUser, persist, log]
+  );
+
+  const resolveReport = React.useCallback(
+    (reportId: string, verdict: 'warning' | 'banned' | 'dismissed') => {
+      const next = {
+        ...db,
+        reports: db.reports.map((r) =>
+          r.id === reportId
+            ? {
+                ...r,
+                status: (verdict === 'warning'
+                  ? 'resolved_warning'
+                  : verdict === 'banned'
+                    ? 'resolved_banned'
+                    : 'dismissed') as Report['status'],
+              }
+            : r
+        ),
+      };
+      persist(next);
+      log(`Report ${reportId} verdict: ${verdict}`, currentUser, next);
+    },
+    [db, persist, log, currentUser]
   );
 
   const resolveDispute = React.useCallback(
@@ -455,6 +520,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     extendEscrow,
     addDisputeMessage,
     resolveDispute,
+    addReportMessage,
+    resolveReport,
     approvePayout,
     rejectPayout,
     setFeePercent,

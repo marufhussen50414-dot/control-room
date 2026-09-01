@@ -5,6 +5,7 @@ import type {
   PayoutRequest,
   Permissions,
   PlatformSettings,
+  Report,
   SectionKey,
   User,
 } from '@/lib/types';
@@ -141,24 +142,97 @@ export function seedOrders(): Order[] {
   }));
 }
 
+const SAMPLE_RECORDING =
+  'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
+
 export function seedDisputes(): Dispute[] {
   return [
     {
       orderId: 10003,
       buyerEmail: 'buyer4@gmail.com',
+      buyerName: 'Rakib Hasan',
       sellerEmail: 'seller4@gmail.com',
+      sellerName: 'Imran Kabir',
+      accountTitle: 'Valorant Account (Diamond)',
+      amount: 12000,
+      reason: 'Account locked after handover',
       buyerEvidence:
-        'Screen recording showing the account gets locked after login. The seller did not provide the recovery email as promised.',
+        'Screen recording showing the account gets locked right after login. The seller did not provide the recovery email as promised.',
       sellerEvidence:
         'Buyer changed the password and email before reporting. Original credentials were working at handover time.',
       credentials:
         'Email: valorantseller@gmail.com\nPassword: s3llerp@ss\nRecovery: sellerbackup@gmail.com',
+      attachments: [
+        {
+          id: 'att1',
+          kind: 'recording',
+          label: 'Login attempt — account locked',
+          url: SAMPLE_RECORDING,
+          durationSec: 46,
+          uploadedBy: 'buyer',
+        },
+      ],
       messages: [
-        { id: 'm1', author: 'buyer', authorName: 'buyer4', text: 'The account is locked. I want a refund.', at: hours(-9) },
-        { id: 'm2', author: 'seller', authorName: 'seller4', text: 'I gave working credentials. Buyer changed them.', at: hours(-8) },
-        { id: 'm3', author: 'admin', authorName: 'Sadia Rahman', text: 'Reviewing evidence from both sides.', at: hours(-7) },
+        { id: 'm1', channel: 'group', author: 'buyer', authorName: 'Rakib Hasan', text: 'The account is locked. I want a refund.', at: hours(-9) },
+        { id: 'm2', channel: 'group', author: 'seller', authorName: 'Imran Kabir', text: 'I gave working credentials. Buyer changed them.', at: hours(-8) },
+        { id: 'm3', channel: 'group', author: 'admin', authorName: 'Sadia Rahman', text: 'Reviewing evidence from both sides.', at: hours(-7) },
+        { id: 'm4', channel: 'buyer', author: 'admin', authorName: 'Sadia Rahman', text: 'Can you send the exact time you tried logging in?', at: hours(-6) },
+        { id: 'm5', channel: 'buyer', author: 'buyer', authorName: 'Rakib Hasan', text: 'Around 9:40 PM last night, right after payment.', at: hours(-6) },
+        { id: 'm6', channel: 'seller', author: 'admin', authorName: 'Sadia Rahman', text: 'Did you change the password after the sale?', at: hours(-5) },
+        { id: 'm7', channel: 'seller', author: 'seller', authorName: 'Imran Kabir', text: 'No, I handed it over as-is. Buyer must have 2FA issues.', at: hours(-5) },
       ],
       status: 'open',
+      createdAt: hours(-10),
+    },
+  ];
+}
+
+export function seedReports(): Report[] {
+  return [
+    {
+      id: 'r1',
+      orderId: 10005,
+      reportedBy: 'buyer',
+      buyerEmail: 'buyer5@gmail.com',
+      buyerName: 'Farhan Sarker',
+      sellerEmail: 'seller5@gmail.com',
+      sellerName: 'Jahid Islam',
+      category: 'scam',
+      description:
+        'Seller took payment outside escrow and never delivered the Mobile Legends Mythic account.',
+      attachments: [
+        {
+          id: 'att2',
+          kind: 'recording',
+          label: 'Chat screen recording with seller',
+          url: SAMPLE_RECORDING,
+          durationSec: 32,
+          uploadedBy: 'buyer',
+        },
+      ],
+      messages: [
+        { id: 'rm1', channel: 'group', author: 'buyer', authorName: 'Farhan Sarker', text: 'This seller scammed me, please ban him.', at: hours(-70) },
+        { id: 'rm2', channel: 'buyer', author: 'admin', authorName: 'Sadia Rahman', text: 'We are investigating this report. Can you share the payment proof?', at: hours(-69) },
+      ],
+      status: 'open',
+      createdAt: hours(-71),
+    },
+    {
+      id: 'r2',
+      reportedBy: 'seller',
+      buyerEmail: 'buyer2@gmail.com',
+      buyerName: 'Sabbir Rahman',
+      sellerEmail: 'seller2@gmail.com',
+      sellerName: 'Mehedi Hasan',
+      category: 'abusive_behavior',
+      description:
+        'Buyer sent abusive and threatening messages after a normal price negotiation.',
+      attachments: [],
+      messages: [
+        { id: 'rm3', channel: 'group', author: 'seller', authorName: 'Mehedi Hasan', text: 'Buyer is threatening me over chat, screenshots attached to my evidence.', at: hours(-3) },
+      ],
+      status: 'open',
+      createdAt: hours(-3),
     },
   ];
 }
