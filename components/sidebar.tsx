@@ -22,6 +22,9 @@ export function Sidebar({
     return currentUser.permissions[item.key];
   });
 
+  const accountItem = visibleItems.find((item) => item.key === 'account');
+  const mainItems = visibleItems.filter((item) => item.key !== 'account');
+
   const disputeCount =
     (db.disputes ?? []).filter((d) => d.status === 'open').length +
     (db.reports ?? []).filter((r) => r.status === 'open').length;
@@ -39,8 +42,31 @@ export function Sidebar({
         </div>
       </div>
 
+      {accountItem && (
+        <div className="border-b p-3">
+          {(() => {
+            const Icon = accountItem.icon;
+            const isActive = active === accountItem.key;
+            return (
+              <button
+                onClick={() => onSelect(accountItem.key)}
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                  isActive
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                )}
+              >
+                <Icon className="h-[1.15rem] w-[1.15rem] shrink-0" />
+                <span className="flex-1 text-left">{accountItem.label}</span>
+              </button>
+            );
+          })()}
+        </div>
+      )}
+
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {visibleItems.map((item) => {
+        {mainItems.map((item) => {
           const Icon = item.icon;
           const isActive = active === item.key;
           const badge =

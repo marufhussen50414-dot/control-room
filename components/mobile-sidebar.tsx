@@ -32,6 +32,9 @@ export function MobileSidebar({
     return currentUser.permissions[item.key];
   });
 
+  const accountItem = visibleItems.find((item) => item.key === 'account');
+  const mainItems = visibleItems.filter((item) => item.key !== 'account');
+
   const disputeCount =
     (db.disputes ?? []).filter((d) => d.status === 'open').length +
     (db.reports ?? []).filter((r) => r.status === 'open').length;
@@ -53,8 +56,35 @@ export function MobileSidebar({
             </div>
           </SheetTitle>
         </SheetHeader>
+
+        {accountItem && (
+          <div className="border-b p-3">
+            {(() => {
+              const Icon = accountItem.icon;
+              const isActive = active === accountItem.key;
+              return (
+                <button
+                  onClick={() => {
+                    onSelect(accountItem.key);
+                    onOpenChange(false);
+                  }}
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  )}
+                >
+                  <Icon className="h-[1.15rem] w-[1.15rem] shrink-0" />
+                  <span className="flex-1 text-left">{accountItem.label}</span>
+                </button>
+              );
+            })()}
+          </div>
+        )}
+
         <nav className="space-y-1 p-3">
-          {visibleItems.map((item) => {
+          {mainItems.map((item) => {
             const Icon = item.icon;
             const isActive = active === item.key;
             const badge =
