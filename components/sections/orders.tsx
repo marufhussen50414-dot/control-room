@@ -8,13 +8,12 @@ import {
   Clock,
   Plus,
   Download,
-  Eye,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DisputesReportsView } from '@/components/sections/disputes-reports';
 import {
   Table,
   TableBody,
@@ -291,166 +290,9 @@ export function OrderManagement() {
         </TabsContent>
 
         <TabsContent value="disputes">
-          <DisputesView />
+          <DisputesReportsView defaultTab="disputes" />
         </TabsContent>
       </Tabs>
-    </div>
-  );
-}
-
-export function DisputesView() {
-  const { db, addDisputeMessage, resolveDispute } = useApp();
-  const [text, setText] = React.useState('');
-  const [selectedId, setSelectedId] = React.useState<number | null>(
-    db.disputes[0]?.orderId ?? null
-  );
-
-  const dispute = db.disputes.find((d) => d.orderId === selectedId);
-
-  const send = () => {
-    if (!dispute || !text.trim()) return;
-    addDisputeMessage(dispute.orderId, text);
-    setText('');
-  };
-
-  return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      <Card className="lg:col-span-2">
-        <CardContent className="p-5">
-          {!dispute ? (
-            <p className="py-10 text-center text-muted-foreground">
-              No disputes selected.
-            </p>
-          ) : (
-            <div className="space-y-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold">
-                    Dispute · Order #{dispute.orderId}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {dispute.buyerEmail} vs {dispute.sellerEmail}
-                  </p>
-                </div>
-                <Badge
-                  className={
-                    dispute.status === 'open'
-                      ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-400'
-                      : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400'
-                  }
-                >
-                  {dispute.status === 'open'
-                    ? 'Open'
-                    : dispute.status === 'resolved_release'
-                      ? 'Released to Seller'
-                      : 'Refunded Buyer'}
-                </Badge>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-500/20 dark:bg-blue-500/5">
-                  <h4 className="mb-2 text-sm font-semibold text-blue-700 dark:text-blue-400">
-                    Buyer Evidence
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    {dispute.buyerEvidence}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/5">
-                  <h4 className="mb-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-                    Seller Evidence
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    {dispute.sellerEvidence}
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-lg border bg-muted/30 p-4">
-                <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold">
-                  <Eye className="h-4 w-4" />
-                  Credential Details
-                </h4>
-                <pre className="whitespace-pre-wrap font-mono text-xs text-muted-foreground">
-                  {dispute.credentials}
-                </pre>
-              </div>
-
-              {dispute.status === 'open' && (
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      resolveDispute(dispute.orderId, 'release');
-                      toast.success('Funds released to seller');
-                    }}
-                  >
-                    Release to Seller
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => {
-                      resolveDispute(dispute.orderId, 'refund');
-                      toast.success('Buyer refunded');
-                    }}
-                  >
-                    Refund Buyer
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="flex h-full flex-col p-5">
-          <h3 className="mb-3 font-semibold">Mediation Chat</h3>
-          {dispute ? (
-            <>
-              <div className="flex-1 space-y-3 overflow-y-auto pb-3">
-                {dispute.messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className={`flex ${m.author === 'admin' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
-                        m.author === 'admin'
-                          ? 'bg-primary text-primary-foreground'
-                          : m.author === 'buyer'
-                            ? 'bg-blue-100 text-blue-900 dark:bg-blue-500/15 dark:text-blue-200'
-                            : 'bg-emerald-100 text-emerald-900 dark:bg-emerald-500/15 dark:text-emerald-200'
-                      }`}
-                    >
-                      <p className="mb-0.5 text-xs font-semibold opacity-80">
-                        {m.authorName}
-                      </p>
-                      <p>{m.text}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {dispute.status === 'open' && (
-                <div className="flex gap-2 border-t pt-3">
-                  <Input
-                    placeholder="Type a message…"
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && send()}
-                  />
-                  <Button size="sm" onClick={send}>
-                    Send
-                  </Button>
-                </div>
-              )}
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground">Select a dispute.</p>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

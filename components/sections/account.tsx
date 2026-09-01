@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useApp } from '@/lib/store';
-import { formatDateTime, formatTime } from '@/lib/format';
+import { formatDateTime } from '@/lib/format';
 import { toast } from 'sonner';
 
 export function AccountSettings() {
@@ -280,12 +280,9 @@ export function AccountSettings() {
               <div key={a.id} className="flex gap-3 text-sm">
                 <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
                 <div>
-                  <p>
-                    You {a.action.toLowerCase().startsWith('you') ? '' : ''}
-                    <span className="text-muted-foreground"> {a.action}</span>
-                  </p>
+                  <p className="text-muted-foreground">{a.action}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatDateTime(a.at)} · {formatTime(a.at)}
+                    {formatDateTime(a.at)}
                   </p>
                 </div>
               </div>

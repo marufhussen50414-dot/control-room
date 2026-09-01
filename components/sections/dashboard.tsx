@@ -28,9 +28,9 @@ export function Dashboard() {
   const pendingOrders = db.orders.filter(
     (o) => o.status === 'PENDING' || o.status === 'VERIFYING'
   ).length;
-  const activeDisputes = db.disputes.filter(
-    (d) => d.status === 'open'
-  ).length;
+  const activeDisputes =
+    db.disputes.filter((d) => d.status === 'open').length +
+    db.reports.filter((r) => r.status === 'open').length;
   const totalListings = db.orders.length;
   const pendingApproval = db.orders.filter((o) => o.status === 'PENDING').length;
 
@@ -80,7 +80,7 @@ export function Dashboard() {
           tone="warning"
         />
         <StatCard
-          label="Active Disputes"
+          label="Active Disputes & Reports"
           value={formatNumber(activeDisputes)}
           sub="Open cases needing staff intervention"
           icon={Gavel}
