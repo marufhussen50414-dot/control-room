@@ -470,8 +470,8 @@ export function DisputesReportsView({
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid gap-4 xl:grid-cols-3">
-                  <Card className="order-2 xl:order-1 xl:col-span-2">
+                <div className="flex flex-col gap-4">
+                  <Card className="order-2">
                     <CardContent className="space-y-5 p-5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
@@ -648,8 +648,8 @@ export function DisputesReportsView({
                     </CardContent>
                   </Card>
 
-                  <Card className="order-1 xl:order-2">
-                    <CardContent className="flex h-full flex-col p-5">
+                  <Card className="order-1 flex h-[520px] flex-col">
+                    <CardContent className="flex h-full min-h-0 flex-col p-5">
                       <h3 className="mb-3 flex items-center gap-2 font-semibold">
                         <MessageSquare className="h-4 w-4" />
                         Mediation Chat
