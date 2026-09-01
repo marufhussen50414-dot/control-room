@@ -33,8 +33,8 @@ export function MobileSidebar({
   });
 
   const disputeCount =
-    db.disputes.filter((d) => d.status === 'open').length +
-    db.reports.filter((r) => r.status === 'open').length;
+    (db.disputes ?? []).filter((d) => d.status === 'open').length +
+    (db.reports ?? []).filter((r) => r.status === 'open').length;
   const pendingPayouts = db.payouts.filter((p) => p.status === 'pending').length;
 
   return (
