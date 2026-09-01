@@ -29,8 +29,8 @@ export function Dashboard() {
     (o) => o.status === 'PENDING' || o.status === 'VERIFYING'
   ).length;
   const activeDisputes =
-    db.disputes.filter((d) => d.status === 'open').length +
-    db.reports.filter((r) => r.status === 'open').length;
+    (db.disputes ?? []).filter((d) => d.status === 'open').length +
+    (db.reports ?? []).filter((r) => r.status === 'open').length;
   const totalListings = db.orders.length;
   const pendingApproval = db.orders.filter((o) => o.status === 'PENDING').length;
 

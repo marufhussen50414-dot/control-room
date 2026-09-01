@@ -278,12 +278,12 @@ export function DisputesReportsView({
   const [query, setQuery] = React.useState('');
   const [chatChannel, setChatChannel] = React.useState<ChatChannel>('group');
 
-  const disputeItems: CaseItem[] = db.disputes.map((d) => ({
+  const disputeItems: CaseItem[] = (db.disputes ?? []).map((d) => ({
     kind: 'dispute',
     id: String(d.orderId),
     data: d,
   }));
-  const reportItems: CaseItem[] = db.reports.map((r) => ({
+  const reportItems: CaseItem[] = (db.reports ?? []).map((r) => ({
     kind: 'report',
     id: r.id,
     data: r,
@@ -556,7 +556,7 @@ export function DisputesReportsView({
                         </div>
                       )}
 
-                      {selected.data.attachments.length > 0 && (
+                      {(selected.data.attachments?.length ?? 0) > 0 && (
                         <div className="space-y-2">
                           <h4 className="text-xs font-semibold text-muted-foreground">
                             Attachments &amp; Screen Recordings
@@ -674,7 +674,7 @@ export function DisputesReportsView({
                               className="mt-2 min-h-0 flex-1"
                             >
                               <ChatThread
-                                messages={selected.data.messages.filter(
+                                messages={(selected.data.messages ?? []).filter(
                                   (m) => m.channel === ch
                                 )}
                                 emptyLabel={
