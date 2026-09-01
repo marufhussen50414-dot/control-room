@@ -197,10 +197,14 @@ function ChatThread({
   disabled: boolean;
 }) {
   const [text, setText] = React.useState('');
-  const endRef = React.useRef<HTMLDivElement>(null);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end' });
+    const el = scrollRef.current;
+    if (!el) return;
+    // Scroll only the message list itself — never the page — to the
+    // latest message.
+    el.scrollTop = el.scrollHeight;
   }, [messages.length]);
 
   const send = () => {
@@ -211,7 +215,10 @@ function ChatThread({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 space-y-3 overflow-y-auto pb-3">
+      <div
+        ref={scrollRef}
+        className="flex-1 space-y-3 overflow-y-auto pb-3"
+      >
         {messages.length === 0 && (
           <p className="py-8 text-center text-xs text-muted-foreground">
             {emptyLabel}
@@ -223,13 +230,14 @@ function ChatThread({
             className={`flex ${m.author === 'admin' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
+              className={cn(
+                'max-w-[85%] rounded-lg border px-3 py-2 text-sm',
                 m.author === 'admin'
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'border-transparent bg-primary text-primary-foreground'
                   : m.author === 'buyer'
-                    ? 'bg-blue-100 text-blue-900 dark:bg-blue-500/15 dark:text-blue-200'
-                    : 'bg-emerald-100 text-emerald-900 dark:bg-emerald-500/15 dark:text-emerald-200'
-              }`}
+                    ? 'border-blue-200 bg-blue-100 text-blue-900 dark:border-blue-400/30 dark:bg-blue-950/70 dark:text-blue-100'
+                    : 'border-emerald-200 bg-emerald-100 text-emerald-900 dark:border-emerald-400/30 dark:bg-emerald-950/70 dark:text-emerald-100'
+              )}
             >
               <p className="mb-0.5 flex items-center gap-1.5 text-xs font-semibold opacity-80">
                 {m.authorName}
@@ -241,7 +249,6 @@ function ChatThread({
             </div>
           </div>
         ))}
-        <div ref={endRef} />
       </div>
       {!disabled && (
         <div className="flex gap-2 border-t pt-3">
@@ -464,7 +471,7 @@ export function DisputesReportsView({
                 </Card>
               ) : (
                 <div className="grid gap-4 xl:grid-cols-3">
-                  <Card className="xl:col-span-2">
+                  <Card className="order-2 xl:order-1 xl:col-span-2">
                     <CardContent className="space-y-5 p-5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
@@ -641,7 +648,7 @@ export function DisputesReportsView({
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className="order-1 xl:order-2">
                     <CardContent className="flex h-full flex-col p-5">
                       <h3 className="mb-3 flex items-center gap-2 font-semibold">
                         <MessageSquare className="h-4 w-4" />
