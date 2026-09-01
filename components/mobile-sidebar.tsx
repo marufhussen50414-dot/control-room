@@ -32,7 +32,9 @@ export function MobileSidebar({
     return currentUser.permissions[item.key];
   });
 
-  const disputeCount = db.disputes.filter((d) => d.status === 'open').length;
+  const disputeCount =
+    db.disputes.filter((d) => d.status === 'open').length +
+    db.reports.filter((r) => r.status === 'open').length;
   const pendingPayouts = db.payouts.filter((p) => p.status === 'pending').length;
 
   return (
@@ -79,7 +81,7 @@ export function MobileSidebar({
                 <span className="flex-1 text-left">{item.label}</span>
                 {badge > 0 && (
                   <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/10 px-1.5 text-[11px] font-semibold text-primary">
-                  {badge}
+                    {badge}
                   </span>
                 )}
               </button>

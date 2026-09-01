@@ -42,7 +42,7 @@ export function Topbar({
   onSelect: (key: SectionKey) => void;
   onOpenMobile: () => void;
 }) {
-  const { currentUser, logout, db } = useApp();
+  const { currentUser, logout } = useApp();
   if (!currentUser) return null;
 
   const activeLabel =

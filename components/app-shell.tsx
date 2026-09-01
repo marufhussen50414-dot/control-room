@@ -8,7 +8,8 @@ import { Topbar } from '@/components/topbar';
 import { MobileSidebar } from '@/components/mobile-sidebar';
 import { OwnerNameModal } from '@/components/owner-name-modal';
 import { Dashboard } from '@/components/sections/dashboard';
-import { OrderManagement, DisputesView } from '@/components/sections/orders';
+import { OrderManagement } from '@/components/sections/orders';
+import { DisputesReportsView } from '@/components/sections/disputes-reports';
 import { PayoutFinance } from '@/components/sections/payouts';
 import { Members } from '@/components/sections/members';
 import { AccountSettings } from '@/components/sections/account';
@@ -29,20 +30,7 @@ export function AppShell() {
       case 'orders':
         return <OrderManagement />;
       case 'disputes':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">
-                Disputes &amp; Mediation
-              </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Resolve buyer-seller conflicts with evidence review and
-                verdicts.
-              </p>
-            </div>
-            <DisputesView />
-          </div>
-        );
+        return <DisputesReportsView />;
       case 'payouts':
         return <PayoutFinance />;
       case 'finance':
