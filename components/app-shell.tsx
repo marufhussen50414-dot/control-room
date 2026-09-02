@@ -17,7 +17,6 @@ import { AuditLog } from '@/components/sections/audit';
 import { ActiveEscrows } from '@/components/sections/active-escrows';
 import type { SectionKey } from '@/lib/types';
 
-// 🔥 children প্রপ যোগ করা হয়েছে
 export function AppShell({ children }: { children?: React.ReactNode }) {
   const { currentUser } = useApp();
   const [active, setActive] = React.useState<SectionKey>('dashboard');
@@ -26,12 +25,10 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
   if (!currentUser) return <LoginScreen />;
 
   const renderSection = () => {
-    // 🔥 যদি children থাকে, তাহলে সেটা রেন্ডার করবে
     if (children) {
       return children;
     }
 
-    // নাহলে ডিফল্ট সেকশন রেন্ডার করবে
     switch (active) {
       case 'dashboard':
         return <Dashboard />;
