@@ -202,8 +202,6 @@ function ChatThread({
   React.useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    // Scroll only the message list itself — never the page — to the
-    // latest message.
     el.scrollTop = el.scrollHeight;
   }, [messages.length]);
 
@@ -284,6 +282,7 @@ export function DisputesReportsView({
   const [tab, setTab] = React.useState<CaseKind>(defaultTab);
   const [query, setQuery] = React.useState('');
   const [chatChannel, setChatChannel] = React.useState<ChatChannel>('group');
+  const [selectedId, setSelectedId] = React.useState<string | null>(null); // 🔥 ডিফল্ট null
 
   const disputeItems: CaseItem[] = (db.disputes ?? []).map((d) => ({
     kind: 'dispute',
@@ -313,16 +312,10 @@ export function DisputesReportsView({
     return hay.toLowerCase().includes(q);
   });
 
-  const [selectedId, setSelectedId] = React.useState<string | null>(
-    filtered[0]?.id ?? null
-  );
-
+  // 🔥 selectedId আপডেট করুন যখন ট্যাব পরিবর্তন হয়
   React.useEffect(() => {
     setChatChannel('group');
-    if (!filtered.find((i) => i.id === selectedId)) {
-      setSelectedId(filtered[0]?.id ?? null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setSelectedId(null); // 🔥 ট্যাব পরিবর্তন হলে selectedId null করুন
   }, [tab]);
 
   const selected = filtered.find((i) => i.id === selectedId) ?? null;
@@ -353,7 +346,7 @@ export function DisputesReportsView({
           className="text-left"
           onClick={() => {
             setTab('disputes');
-            setSelectedId(disputeItems[0]?.id ?? null);
+            setSelectedId(null);
           }}
         >
           <StatCard
@@ -368,7 +361,7 @@ export function DisputesReportsView({
           className="text-left"
           onClick={() => {
             setTab('reports');
-            setSelectedId(reportItems[0]?.id ?? null);
+            setSelectedId(null);
           }}
         >
           <StatCard
@@ -381,7 +374,10 @@ export function DisputesReportsView({
         </button>
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as CaseKind)}>
+      <Tabs value={tab} onValueChange={(v) => {
+        setTab(v as CaseKind);
+        setSelectedId(null); // 🔥 ট্যাব পরিবর্তন হলে selectedId null করুন
+      }}>
         <TabsList>
           <TabsTrigger value="disputes">
             Disputes
@@ -460,7 +456,7 @@ export function DisputesReportsView({
               })}
             </div>
 
-            {/* Detail */}
+            {/* Detail - শুধু তখনই দেখাবে যখন selectedId আছে */}
             <div>
               {!selected ? (
                 <Card>
@@ -471,6 +467,7 @@ export function DisputesReportsView({
                 </Card>
               ) : (
                 <div className="flex flex-col gap-4">
+                  {/* ... ডিটেইল ভিউ (আগের মতোই) ... */}
                   <Card className="order-2">
                     <CardContent className="space-y-5 p-5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
