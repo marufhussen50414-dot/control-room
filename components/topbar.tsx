@@ -35,10 +35,12 @@ function roleBadge(role: string) {
 
 export function Topbar({
   active,
+  titleOverride,
   onSelect,
   onOpenMobile,
 }: {
   active: SectionKey;
+  titleOverride?: string;
   onSelect: (key: SectionKey) => void;
   onOpenMobile: () => void;
 }) {
@@ -46,7 +48,7 @@ export function Topbar({
   if (!currentUser) return null;
 
   const activeLabel =
-    NAV_ITEMS.find((n) => n.key === active)?.label ?? 'Dashboard';
+    titleOverride ?? (NAV_ITEMS.find((n) => n.key === active)?.label ?? 'Dashboard');
   const initials = (currentUser.name || currentUser.email)
     .split(' ')
     .map((s) => s[0])
@@ -118,7 +120,7 @@ export function Topbar({
                 key={item.key}
                 onClick={() => onSelect(item.key)}
                 className={cn(
-                  active === item.key && 'bg-accent text-accent-foreground'
+                  !titleOverride && active === item.key && 'bg-accent text-accent-foreground'
                 )}
               >
                 {item.label}
