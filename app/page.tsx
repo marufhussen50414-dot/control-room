@@ -1,5 +1,7 @@
-import { AppShell } from '@/components/app-shell';
+'use client';
 
-export default function Home() {
-  return <AppShell />;
+import { DisputesReportsView } from '@/components/sections/disputes-reports';
+
+export default function DisputesPage() {
+  return <DisputesReportsView defaultTab="disputes" />;
 }
