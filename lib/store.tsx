@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { toast } from 'sonner';
 import type {
   AuditEntry,
   ChatChannel,
@@ -32,11 +31,26 @@ import {
 } from '@/lib/mock-data';
 import { OWNER_CONFIG } from '@/src/config/ownerConfig';
 import {
+  deleteMemberRemote,
+  fetchAuditRemote,
   fetchDisputesRemote,
-  fetchProfileName,
+  fetchMembersRemote,
+  fetchOrdersRemote,
+  fetchPayoutsRemote,
+  fetchReportsRemote,
+  fetchSettingsRemote,
+  insertAuditRemote,
+  seedAuditRemote,
   seedDisputesRemote,
+  seedOrdersRemote,
+  seedPayoutsRemote,
+  seedReportsRemote,
   updateDisputeRemote,
-  upsertProfileName,
+  updateOrderRemote,
+  updatePayoutRemote,
+  updateReportRemote,
+  updateSettingsRemote,
+  upsertMemberRemote,
 } from '@/lib/supabase-sync';
 
 const STORAGE_KEY = 'gamehaatbd_control_room_v2';
@@ -165,44 +179,124 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setDb(local);
     setCurrentUserId(localStorage.getItem(SESSION_KEY));
 
-    // Cross-device owner name: check Supabase `profiles` before revealing
-    // the UI, so the "set your name" popup never flashes if another
-    // device already saved one for this email.
+    // Members / profiles: merge remote rows (by email) into the local user
+    // list before revealing the UI, so the "set your name" popup and every
+    // member's saved details are already correct on a brand-new device.
     (async () => {
-      const owner = local.users.find((u) => u.role === 'owner');
-      if (owner) {
-        const remoteName = await fetchProfileName(owner.email);
-        if (remoteName && remoteName.trim()) {
-          setDb((prev) => {
-            const next = {
-              ...prev,
-              ownerNameSet: true,
-              users: prev.users.map((u) =>
-                u.id === owner.id ? { ...u, name: remoteName } : u
-              ),
-            };
-            saveDB(next);
-            return next;
-          });
+      const remoteMembers = await fetchMembersRemote();
+      if (remoteMembers) {
+        const byEmail = new Map(remoteMembers.map((m) => [m.email, m.user]));
+        const mergedUsers = local.users.map((u) => {
+          const remote = byEmail.get(u.email);
+          if (!remote) return u;
+          byEmail.delete(u.email);
+          return { ...u, ...remote, id: u.id };
+        });
+        // Members added on another device that aren't in the local seed list.
+        byEmail.forEach((remote, email) => {
+          mergedUsers.push({ ...remote, id: `remote-${email}` });
+        });
+        const owner = mergedUsers.find((u) => u.role === 'owner');
+        const ownerNameSet = !!(owner?.name && owner.name.trim());
+
+        setDb((prev) => {
+          const next = { ...prev, users: mergedUsers, ownerNameSet };
+          saveDB(next);
+          return next;
+        });
+
+        if (remoteMembers.length === 0) {
+          // Brand-new profiles table: push the local seed members up once.
+          local.users.forEach((u) => upsertMemberRemote(u));
         }
       }
       setHydrated(true);
     })();
 
-    // Disputes: source of truth becomes Supabase once it has data; on a
-    // brand-new empty table, push the local mock disputes up once.
+    // Orders
     (async () => {
-      const remoteDisputes = await fetchDisputesRemote();
-      if (remoteDisputes === null) return; // fetch failed, keep local data
-      if (remoteDisputes.length > 0) {
+      const remote = await fetchOrdersRemote();
+      if (remote === null) return;
+      if (remote.length > 0) {
         setDb((prev) => {
-          const next = { ...prev, disputes: remoteDisputes };
+          const next = { ...prev, orders: remote };
+          saveDB(next);
+          return next;
+        });
+      } else {
+        seedOrdersRemote(local.orders);
+      }
+    })();
+
+    // Disputes
+    (async () => {
+      const remote = await fetchDisputesRemote();
+      if (remote === null) return;
+      if (remote.length > 0) {
+        setDb((prev) => {
+          const next = { ...prev, disputes: remote };
           saveDB(next);
           return next;
         });
       } else {
         seedDisputesRemote(local.disputes);
       }
+    })();
+
+    // Reports
+    (async () => {
+      const remote = await fetchReportsRemote();
+      if (remote === null) return;
+      if (remote.length > 0) {
+        setDb((prev) => {
+          const next = { ...prev, reports: remote };
+          saveDB(next);
+          return next;
+        });
+      } else {
+        seedReportsRemote(local.reports);
+      }
+    })();
+
+    // Payouts
+    (async () => {
+      const remote = await fetchPayoutsRemote();
+      if (remote === null) return;
+      if (remote.length > 0) {
+        setDb((prev) => {
+          const next = { ...prev, payouts: remote };
+          saveDB(next);
+          return next;
+        });
+      } else {
+        seedPayoutsRemote(local.payouts);
+      }
+    })();
+
+    // Audit log
+    (async () => {
+      const remote = await fetchAuditRemote();
+      if (remote === null) return;
+      if (remote.length > 0) {
+        setDb((prev) => {
+          const next = { ...prev, audit: remote };
+          saveDB(next);
+          return next;
+        });
+      } else {
+        seedAuditRemote(local.audit);
+      }
+    })();
+
+    // Settings
+    (async () => {
+      const remote = await fetchSettingsRemote();
+      if (remote === null) return;
+      setDb((prev) => {
+        const next = { ...prev, settings: { feePercent: remote.feePercent } };
+        saveDB(next);
+        return next;
+      });
     })();
   }, []);
 
@@ -229,6 +323,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const updated = { ...target, audit: [entry, ...target.audit] };
       setDb(updated);
       saveDB(updated);
+      insertAuditRemote(entry);
     },
     [db]
   );
@@ -261,7 +356,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       persist(next);
       log('Set owner display name', currentUser ?? null, next);
       const owner = next.users.find((u) => u.role === 'owner');
-      if (owner) upsertProfileName(owner.email, name);
+      if (owner) upsertMemberRemote(owner);
     },
     [db, persist, log, currentUser]
   );
@@ -269,16 +364,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = React.useCallback(
     (patch: Partial<User>) => {
       if (!currentUser) return;
+      const updatedUser = { ...currentUser, ...patch };
       const next = {
         ...db,
-        users: db.users.map((u) =>
-          u.id === currentUser.id ? { ...u, ...patch } : u
-        ),
+        users: db.users.map((u) => (u.id === currentUser.id ? updatedUser : u)),
       };
       persist(next);
-      if (patch.name && patch.name.trim()) {
-        upsertProfileName(currentUser.email, patch.name.trim());
-      }
+      upsertMemberRemote(updatedUser);
     },
     [db, currentUser, persist]
   );
@@ -286,14 +378,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const changePassword = React.useCallback(
     (current: string, next: string) => {
       if (!currentUser || currentUser.password !== current) return false;
+      const updatedUser = { ...currentUser, password: next };
       const updated = {
         ...db,
-        users: db.users.map((u) =>
-          u.id === currentUser.id ? { ...u, password: next } : u
-        ),
+        users: db.users.map((u) => (u.id === currentUser.id ? updatedUser : u)),
       };
       persist(updated);
       log('Changed account password', currentUser, updated);
+      upsertMemberRemote(updatedUser);
       return true;
     },
     [db, currentUser, persist, log]
@@ -328,18 +420,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const next = { ...db, users: [...db.users, newUser] };
       persist(next);
       log(`Added ${data.role} "${data.name}"`, currentUser, next);
+      upsertMemberRemote(newUser);
     },
     [db, persist, log, currentUser]
   );
 
   const updateMember = React.useCallback(
     (id: string, patch: Partial<User>) => {
+      const target = db.users.find((u) => u.id === id);
+      const updatedUser = target ? { ...target, ...patch } : null;
       const next = {
         ...db,
         users: db.users.map((u) => (u.id === id ? { ...u, ...patch } : u)),
       };
       persist(next);
       log(`Updated member "${patch.name ?? id}"`, currentUser, next);
+      if (updatedUser) upsertMemberRemote(updatedUser);
     },
     [db, persist, log, currentUser]
   );
@@ -351,6 +447,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const next = { ...db, users: db.users.filter((u) => u.id !== id) };
       persist(next);
       log(`Removed member "${target.name}"`, currentUser, next);
+      deleteMemberRemote(target.email);
     },
     [db, persist, log, currentUser]
   );
@@ -365,6 +462,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       };
       persist(next);
       log(`Order #${id} status set to ${status}`, currentUser, next);
+      updateOrderRemote(id, { status });
     },
     [db, persist, log, currentUser]
   );
@@ -383,27 +481,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       };
       persist(next);
       log(`Released escrow for Order #${id}`, currentUser, next);
+      updateOrderRemote(id, { escrowLocked: false, status: 'COMPLETED' });
     },
     [db, persist, log, currentUser]
   );
 
   const extendEscrow = React.useCallback(
     (id: number, hrs: number) => {
+      let newDeadline = '';
       const next = {
         ...db,
-        orders: db.orders.map((o) =>
-          o.id === id
-            ? {
-                ...o,
-                escrowDeadline: new Date(
-                  new Date(o.escrowDeadline).getTime() + hrs * 3600000
-                ).toISOString(),
-              }
-            : o
-        ),
+        orders: db.orders.map((o) => {
+          if (o.id !== id) return o;
+          newDeadline = new Date(
+            new Date(o.escrowDeadline).getTime() + hrs * 3600000
+          ).toISOString();
+          return { ...o, escrowDeadline: newDeadline };
+        }),
       };
       persist(next);
       log(`Extended escrow for Order #${id} by ${hrs}h`, currentUser, next);
+      if (newDeadline) updateOrderRemote(id, { escrowDeadline: newDeadline });
     },
     [db, persist, log, currentUser]
   );
@@ -446,37 +544,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         at: new Date().toISOString(),
         channel,
       };
+      let updatedMessages: DisputeMessage[] = [];
       const next = {
         ...db,
-        reports: db.reports.map((r) =>
-          r.id === reportId ? { ...r, messages: [...r.messages, msg] } : r
-        ),
+        reports: db.reports.map((r) => {
+          if (r.id !== reportId) return r;
+          updatedMessages = [...r.messages, msg];
+          return { ...r, messages: updatedMessages };
+        }),
       };
       persist(next);
       log(`Sent ${channel} message on Report ${reportId}`, currentUser, next);
+      updateReportRemote(reportId, { messages: updatedMessages });
     },
     [db, currentUser, persist, log]
   );
 
   const resolveReport = React.useCallback(
     (reportId: string, verdict: 'warning' | 'banned' | 'dismissed') => {
+      const status = (
+        verdict === 'warning'
+          ? 'resolved_warning'
+          : verdict === 'banned'
+            ? 'resolved_banned'
+            : 'dismissed'
+      ) as Report['status'];
       const next = {
         ...db,
         reports: db.reports.map((r) =>
-          r.id === reportId
-            ? {
-                ...r,
-                status: (verdict === 'warning'
-                  ? 'resolved_warning'
-                  : verdict === 'banned'
-                    ? 'resolved_banned'
-                    : 'dismissed') as Report['status'],
-              }
-            : r
+          r.id === reportId ? { ...r, status } : r
         ),
       };
       persist(next);
       log(`Report ${reportId} verdict: ${verdict}`, currentUser, next);
+      updateReportRemote(reportId, { status });
     },
     [db, persist, log, currentUser]
   );
@@ -487,6 +588,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         verdict === 'release'
           ? ('resolved_release' as const)
           : ('resolved_refund' as const);
+      const orderStatus: OrderStatus =
+        verdict === 'release' ? 'COMPLETED' : 'CANCELLED';
       const next = {
         ...db,
         disputes: db.disputes.map((d) =>
@@ -494,14 +597,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ),
         orders: db.orders.map((o) =>
           o.id === orderId
-            ? {
-                ...o,
-                status:
-                  verdict === 'release'
-                    ? ('COMPLETED' as OrderStatus)
-                    : ('CANCELLED' as OrderStatus),
-                escrowLocked: false,
-              }
+            ? { ...o, status: orderStatus, escrowLocked: false }
             : o
         ),
       };
@@ -512,12 +608,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         next
       );
       updateDisputeRemote(orderId, { status });
+      updateOrderRemote(orderId, { status: orderStatus, escrowLocked: false });
     },
     [db, persist, log, currentUser]
   );
 
   const approvePayout = React.useCallback(
     (id: number, trxId: string) => {
+      let updatedUser: User | null = null;
       const next = {
         ...db,
         payouts: db.payouts.map((p) =>
@@ -525,20 +623,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             ? { ...p, status: 'approved' as const, trxId }
             : p
         ),
-        users: db.users.map((u) =>
-          u.id === currentUser?.id
-            ? {
-                ...u,
-                metrics: {
-                  ...u.metrics,
-                  withdrawalsProcessed: u.metrics.withdrawalsProcessed + 1,
-                },
-              }
-            : u
-        ),
+        users: db.users.map((u) => {
+          if (u.id !== currentUser?.id) return u;
+          updatedUser = {
+            ...u,
+            metrics: {
+              ...u.metrics,
+              withdrawalsProcessed: u.metrics.withdrawalsProcessed + 1,
+            },
+          };
+          return updatedUser;
+        }),
       };
       persist(next);
       log(`Approved Payout #${id} (TrxID: ${trxId})`, currentUser, next);
+      updatePayoutRemote(id, { status: 'approved', trxId });
+      if (updatedUser) upsertMemberRemote(updatedUser);
     },
     [db, currentUser, persist, log]
   );
@@ -553,6 +653,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       };
       persist(next);
       log(`Rejected Payout #${id}`, currentUser, next);
+      updatePayoutRemote(id, { status: 'rejected' });
     },
     [db, persist, log, currentUser]
   );
@@ -562,6 +663,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const next = { ...db, settings: { feePercent: n } };
       persist(next);
       log(`Platform fee set to ${n}%`, currentUser, next);
+      updateSettingsRemote(n);
     },
     [db, persist, log, currentUser]
   );
