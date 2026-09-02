@@ -14,6 +14,7 @@ import { PayoutFinance } from '@/components/sections/payouts';
 import { Members } from '@/components/sections/members';
 import { AccountSettings } from '@/components/sections/account';
 import { AuditLog } from '@/components/sections/audit';
+import { ActiveEscrows } from '@/components/sections/active-escrows'; // 🔥 নতুন ইম্পোর্ট
 import type { SectionKey } from '@/lib/types';
 
 export function AppShell() {
@@ -29,6 +30,8 @@ export function AppShell() {
         return <Dashboard />;
       case 'orders':
         return <OrderManagement />;
+      case 'activeEscrows': // 🔥 নতুন কেস যোগ করা হয়েছে
+        return <ActiveEscrows />;
       case 'disputes':
         return <DisputesReportsView />;
       case 'payouts':
