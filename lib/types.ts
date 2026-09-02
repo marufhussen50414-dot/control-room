@@ -3,7 +3,7 @@ export type Role = 'owner' | 'admin' | 'operator';
 export type SectionKey =
   | 'dashboard'
   | 'orders'
-  | 'activeEscrows' // 🔥 নতুন যোগ করা হয়েছে
+  | 'activeEscrows'
   | 'disputes'
   | 'payouts'
   | 'finance'
