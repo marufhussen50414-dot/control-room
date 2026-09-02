@@ -11,7 +11,6 @@ import {
   Store,
   ShieldAlert,
   MessageSquare,
-  Clock,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -409,7 +408,7 @@ function ReportDetailContent() {
 
 export default function ReportDetailPage() {
   return (
-    <AppShell>
+    <AppShell title="Report Details">
       <ReportDetailContent />
     </AppShell>
   );
