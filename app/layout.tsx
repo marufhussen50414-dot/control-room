@@ -10,6 +10,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'GHB Control Room',
   description: 'Admin & Control Panel for GameHaatBD Marketplace',
+  icons: {
+    icon: '/GHB.png',
+  },
 };
 
 export default function RootLayout({
