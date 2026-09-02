@@ -182,16 +182,48 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Members / profiles: merge remote rows (by email) into the local user
     // list before revealing the UI, so the "set your name" popup and every
     // member's saved details are already correct on a brand-new device.
+    // A remote row may still be missing fields from before full member
+    // sync existed (e.g. only `name` was ever saved) — an empty/absent
+    // remote value must never overwrite a real local one.
     (async () => {
       const remoteMembers = await fetchMembersRemote();
       if (remoteMembers) {
+        const seedByEmail = new Map(
+          [seedOwner(), seedAdmin(), ...seedOperators()].map((u) => [
+            u.email,
+            u,
+          ])
+        );
         const byEmail = new Map(remoteMembers.map((m) => [m.email, m.user]));
         const mergedUsers = local.users.map((u) => {
           const remote = byEmail.get(u.email);
           if (!remote) return u;
           byEmail.delete(u.email);
-          return { ...u, ...remote, id: u.id };
+          return {
+            ...u,
+            name: remote.name || u.name,
+            phone: remote.phone || u.phone,
+            password: remote.password || u.password,
+            role: remote.role || u.role,
+            avatarColor: remote.avatarColor || u.avatarColor,
+            permissions:
+              remote.permissions && Object.keys(remote.permissions).length > 0
+                ? remote.permissions
+                : u.permissions,
+            paymentMethods: remote.paymentMethods || u.paymentMethods,
+            metrics: remote.metrics || u.metrics,
+            createdAt: remote.createdAt || u.createdAt,
+          };
         });
+        // Safety net: a known seeded account (owner/admin/operators) must
+        // never end up with a blank password after merging, even if the
+        // locally saved copy was already corrupted by an older bug.
+        for (const u of mergedUsers) {
+          if (!u.password) {
+            const seed = seedByEmail.get(u.email);
+            if (seed) u.password = seed.password;
+          }
+        }
         // Members added on another device that aren't in the local seed list.
         byEmail.forEach((remote, email) => {
           mergedUsers.push({ ...remote, id: `remote-${email}` });
@@ -706,4 +738,3 @@ export function useApp() {
 }
 
 export { OWNER_CONFIG };
-
