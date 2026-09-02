@@ -11,7 +11,7 @@ export function Sidebar({
   active,
   onSelect,
 }: {
-  active: SectionKey;
+  active: SectionKey | null; // 🔥 null সাপোর্ট যোগ করা হয়েছে
   onSelect: (key: SectionKey) => void;
 }) {
   const { currentUser, db } = useApp();
