@@ -53,13 +53,16 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
     }
   };
 
+  // 🔥 ডিটেইল পেজে active স্টেট null করা হচ্ছে
+  const sidebarActive = children ? null : active;
+
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar active={active} onSelect={setActive} />
+      <Sidebar active={sidebarActive} onSelect={setActive} />
       <MobileSidebar
         open={mobileOpen}
         onOpenChange={setMobileOpen}
-        active={active}
+        active={sidebarActive}
         onSelect={setActive}
       />
       <div className="lg:pl-64">
