@@ -14,10 +14,11 @@ import { PayoutFinance } from '@/components/sections/payouts';
 import { Members } from '@/components/sections/members';
 import { AccountSettings } from '@/components/sections/account';
 import { AuditLog } from '@/components/sections/audit';
-import { ActiveEscrows } from '@/components/sections/active-escrows'; // 🔥 নতুন ইম্পোর্ট
+import { ActiveEscrows } from '@/components/sections/active-escrows';
 import type { SectionKey } from '@/lib/types';
 
-export function AppShell() {
+// 🔥 children প্রপ যোগ করা হয়েছে
+export function AppShell({ children }: { children?: React.ReactNode }) {
   const { currentUser } = useApp();
   const [active, setActive] = React.useState<SectionKey>('dashboard');
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -25,12 +26,18 @@ export function AppShell() {
   if (!currentUser) return <LoginScreen />;
 
   const renderSection = () => {
+    // 🔥 যদি children থাকে, তাহলে সেটা রেন্ডার করবে
+    if (children) {
+      return children;
+    }
+
+    // নাহলে ডিফল্ট সেকশন রেন্ডার করবে
     switch (active) {
       case 'dashboard':
         return <Dashboard />;
       case 'orders':
         return <OrderManagement />;
-      case 'activeEscrows': // 🔥 নতুন কেস যোগ করা হয়েছে
+      case 'activeEscrows':
         return <ActiveEscrows />;
       case 'disputes':
         return <DisputesReportsView />;
