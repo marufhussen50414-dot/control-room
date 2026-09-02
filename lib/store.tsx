@@ -31,6 +31,13 @@ import {
   seedSettings,
 } from '@/lib/mock-data';
 import { OWNER_CONFIG } from '@/src/config/ownerConfig';
+import {
+  fetchDisputesRemote,
+  fetchProfileName,
+  seedDisputesRemote,
+  updateDisputeRemote,
+  upsertProfileName,
+} from '@/lib/supabase-sync';
 
 const STORAGE_KEY = 'gamehaatbd_control_room_v2';
 const SESSION_KEY = 'gamehaatbd_session_user_id';
@@ -154,9 +161,49 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    setDb(loadDB());
+    const local = loadDB();
+    setDb(local);
     setCurrentUserId(localStorage.getItem(SESSION_KEY));
-    setHydrated(true);
+
+    // Cross-device owner name: check Supabase `profiles` before revealing
+    // the UI, so the "set your name" popup never flashes if another
+    // device already saved one for this email.
+    (async () => {
+      const owner = local.users.find((u) => u.role === 'owner');
+      if (owner) {
+        const remoteName = await fetchProfileName(owner.email);
+        if (remoteName && remoteName.trim()) {
+          setDb((prev) => {
+            const next = {
+              ...prev,
+              ownerNameSet: true,
+              users: prev.users.map((u) =>
+                u.id === owner.id ? { ...u, name: remoteName } : u
+              ),
+            };
+            saveDB(next);
+            return next;
+          });
+        }
+      }
+      setHydrated(true);
+    })();
+
+    // Disputes: source of truth becomes Supabase once it has data; on a
+    // brand-new empty table, push the local mock disputes up once.
+    (async () => {
+      const remoteDisputes = await fetchDisputesRemote();
+      if (remoteDisputes === null) return; // fetch failed, keep local data
+      if (remoteDisputes.length > 0) {
+        setDb((prev) => {
+          const next = { ...prev, disputes: remoteDisputes };
+          saveDB(next);
+          return next;
+        });
+      } else {
+        seedDisputesRemote(local.disputes);
+      }
+    })();
   }, []);
 
   const currentUser = React.useMemo(
@@ -213,6 +260,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       next.ownerNameSet = true;
       persist(next);
       log('Set owner display name', currentUser ?? null, next);
+      const owner = next.users.find((u) => u.role === 'owner');
+      if (owner) upsertProfileName(owner.email, name);
     },
     [db, persist, log, currentUser]
   );
@@ -227,6 +276,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ),
       };
       persist(next);
+      if (patch.name && patch.name.trim()) {
+        upsertProfileName(currentUser.email, patch.name.trim());
+      }
     },
     [db, currentUser, persist]
   );
@@ -367,16 +419,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         at: new Date().toISOString(),
         channel,
       };
+      let updatedMessages: DisputeMessage[] = [];
       const next = {
         ...db,
-        disputes: db.disputes.map((d) =>
-          d.orderId === orderId
-            ? { ...d, messages: [...d.messages, msg] }
-            : d
-        ),
+        disputes: db.disputes.map((d) => {
+          if (d.orderId !== orderId) return d;
+          updatedMessages = [...d.messages, msg];
+          return { ...d, messages: updatedMessages };
+        }),
       };
       persist(next);
       log(`Sent ${channel} message on Dispute #${orderId}`, currentUser, next);
+      updateDisputeRemote(orderId, { messages: updatedMessages });
     },
     [db, currentUser, persist, log]
   );
@@ -429,18 +483,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const resolveDispute = React.useCallback(
     (orderId: number, verdict: 'release' | 'refund') => {
+      const status =
+        verdict === 'release'
+          ? ('resolved_release' as const)
+          : ('resolved_refund' as const);
       const next = {
         ...db,
         disputes: db.disputes.map((d) =>
-          d.orderId === orderId
-            ? {
-                ...d,
-                status:
-                  verdict === 'release'
-                    ? ('resolved_release' as const)
-                    : ('resolved_refund' as const),
-              }
-            : d
+          d.orderId === orderId ? { ...d, status } : d
         ),
         orders: db.orders.map((o) =>
           o.id === orderId
@@ -461,6 +511,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         currentUser,
         next
       );
+      updateDisputeRemote(orderId, { status });
     },
     [db, persist, log, currentUser]
   );
