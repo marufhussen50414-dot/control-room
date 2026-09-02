@@ -14,6 +14,7 @@ import { OWNER_CONFIG } from '@/src/config/ownerConfig';
 export const ALL_SECTIONS: { key: SectionKey; label: string }[] = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'orders', label: 'Order Management' },
+  { key: 'activeEscrows', label: 'Active Escrows' }, // 🔥 নতুন যোগ করা হয়েছে
   { key: 'disputes', label: 'Disputes & Reports' },
   { key: 'payouts', label: 'Payout Management' },
   { key: 'finance', label: 'Financial Overview' },
@@ -68,7 +69,11 @@ export function seedAdmin(): User {
     phone: '+8801711111111',
     role: 'admin',
     avatarColor: '#059669',
-    permissions: { ...fullPermissions(), members: false, audit: false },
+    permissions: { 
+      ...fullPermissions(), 
+      members: false, 
+      audit: false 
+    },
     paymentMethods: { bkash: '01711111111', nagad: '', bank: '' },
     metrics: { listingsApproved: 42, disputesResolved: 7, withdrawalsProcessed: 18 },
     createdAt: new Date(now - 30 * 86400000).toISOString(),
@@ -88,6 +93,7 @@ export function seedOperators(): User[] {
       permissions: {
         dashboard: true,
         orders: true,
+        activeEscrows: true, // 🔥 যোগ করা হয়েছে
         disputes: true,
         payouts: false,
         finance: false,
@@ -110,6 +116,7 @@ export function seedOperators(): User[] {
       permissions: {
         dashboard: true,
         orders: true,
+        activeEscrows: true, // 🔥 যোগ করা হয়েছে
         disputes: false,
         payouts: true,
         finance: false,
