@@ -1,5 +1,6 @@
 'use client';
 
+import { AppShell } from '@/components/app-shell';
 import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -208,7 +209,7 @@ function ChatThread({
   );
 }
 
-export default function ReportDetailPage() {
+function ReportDetailContent() {
   const params = useParams();
   const router = useRouter();
   const { db, addReportMessage, resolveReport } = useApp();
@@ -403,5 +404,14 @@ export default function ReportDetailPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// 🔥 মূল পেজ - AppShell দিয়ে র‍্যাপ করা
+export default function ReportDetailPage() {
+  return (
+    <AppShell>
+      <ReportDetailContent />
+    </AppShell>
   );
 }
