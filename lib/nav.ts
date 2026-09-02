@@ -8,7 +8,7 @@ import {
   Users,
   Settings,
   ScrollText,
-  Lock, // 🔥 Active Escrows এর জন্য আইকন যোগ করা হয়েছে
+  Lock,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -20,11 +20,7 @@ export const NAV_ITEMS: {
 }[] = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'orders', label: 'Order Management', icon: Package },
-  { 
-    key: 'activeEscrows', // 🔥 নতুন আইটেম যোগ করা হয়েছে
-    label: 'Active Escrows', 
-    icon: Lock 
-  },
+  { key: 'activeEscrows', label: 'Active Escrows', icon: Lock },
   { key: 'disputes', label: 'Disputes & Reports', icon: Gavel },
   { key: 'payouts', label: 'Payout Management', icon: Wallet },
   { key: 'finance', label: 'Financial Overview', icon: BarChart3 },
