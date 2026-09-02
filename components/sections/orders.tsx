@@ -124,12 +124,10 @@ export function OrderManagement() {
         />
       </div>
 
-      {/* 🔥 শুধু "Disputes" ট্যাব রিমুভ করা হয়েছে — "Active Escrows" রেখেছি */}
       <Tabs defaultValue="all">
         <TabsList>
           <TabsTrigger value="all">All Orders</TabsTrigger>
           <TabsTrigger value="escrow">Active Escrows</TabsTrigger>
-          {/* Disputes ট্যাব রিমুভ করা হয়েছে */}
         </TabsList>
 
         <TabsContent value="all">
