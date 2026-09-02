@@ -392,7 +392,6 @@ function DisputeDetailContent() {
   );
 }
 
-// 🔥 মূল পেজ - AppShell দিয়ে র‍্যাপ করা
 export default function DisputeDetailPage() {
   return (
     <AppShell>
