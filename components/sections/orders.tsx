@@ -3,16 +3,11 @@
 import * as React from 'react';
 import {
   Search,
-  Lock,
-  Unlock,
-  Clock,
-  Plus,
   Download,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -30,7 +25,7 @@ import {
 } from '@/components/ui/select';
 import { OrderStatusBadge } from '@/components/order-status-badge';
 import { useApp } from '@/lib/store';
-import { formatBDT, formatDateTime, timeRemaining } from '@/lib/format';
+import { formatBDT, formatDateTime } from '@/lib/format';
 import type { OrderStatus } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -59,14 +54,8 @@ function exportCSV(rows: Record<string, unknown>[], filename: string) {
 }
 
 export function OrderManagement() {
-  const { db, updateOrderStatus, releaseEscrow, extendEscrow } = useApp();
+  const { db, updateOrderStatus } = useApp();
   const [query, setQuery] = React.useState('');
-  const [tick, setTick] = React.useState(0);
-
-  React.useEffect(() => {
-    const t = setInterval(() => setTick((x) => x + 1), 1000);
-    return () => clearInterval(t);
-  }, []);
 
   const q = query.toLowerCase().trim();
   const filtered = db.orders.filter(
@@ -76,8 +65,6 @@ export function OrderManagement() {
       o.buyerEmail.toLowerCase().includes(q) ||
       o.sellerEmail.toLowerCase().includes(q)
   );
-
-  const escrowOrders = db.orders.filter((o) => o.escrowLocked);
 
   const handleExport = () => {
     exportCSV(
@@ -104,8 +91,7 @@ export function OrderManagement() {
             Order Management Center
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage all marketplace orders, escrow holdings, and dispute
-            mediation.
+            Manage all marketplace orders.
           </p>
         </div>
         <Button variant="outline" onClick={handleExport}>
@@ -124,169 +110,92 @@ export function OrderManagement() {
         />
       </div>
 
-      <Tabs defaultValue="all">
-        <TabsList>
-          <TabsTrigger value="all">All Orders</TabsTrigger>
-          <TabsTrigger value="escrow">Active Escrows</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all">
-          <Card>
-            <CardContent className="px-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="pl-6">Order ID</TableHead>
-                      <TableHead>Buyer</TableHead>
-                      <TableHead>Seller</TableHead>
-                      <TableHead>Account</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Fee</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Update</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map((o) => (
-                      <TableRow key={o.id}>
-                        <TableCell className="pl-6 font-medium">
-                          #{o.id}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {o.buyerEmail}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {o.sellerEmail}
-                        </TableCell>
-                        <TableCell className="max-w-[180px] truncate text-muted-foreground">
-                          {o.accountTitle}
-                        </TableCell>
-                        <TableCell>{formatBDT(o.amount)}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {formatBDT(o.platformFee)}
-                        </TableCell>
-                        <TableCell>
-                          <OrderStatusBadge status={o.status} />
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {formatDateTime(o.createdAt)}
-                        </TableCell>
-                        <TableCell>
-                          <Select
-                            value={o.status}
-                            onValueChange={(v) =>
-                              updateOrderStatus(o.id, v as OrderStatus)
-                            }
-                          >
-                            <SelectTrigger className="h-8 w-[130px]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {(
-                                [
-                                  'PENDING',
-                                  'VERIFYING',
-                                  'COMPLETED',
-                                  'CANCELLED',
-                                  'DISPUTED',
-                                ] as OrderStatus[]
-                              ).map((s) => (
-                                <SelectItem key={s} value={s}>
-                                  {s.charAt(0) + s.slice(1).toLowerCase()}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {filtered.length === 0 && (
-                      <TableRow>
-                        <TableCell
-                          colSpan={9}
-                          className="py-10 text-center text-muted-foreground"
-                        >
-                          No orders match your search.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="escrow">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {escrowOrders.map((o) => (
-              <Card key={o.id}>
-                <CardContent className="space-y-4 p-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Lock className="h-4 w-4 text-primary" />
-                      <span className="font-semibold">#{o.id}</span>
-                    </div>
-                    <OrderStatusBadge status={o.status} />
-                  </div>
-                  <div>
-                    <p className="truncate text-sm text-muted-foreground">
+      <Card>
+        <CardContent className="px-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-6">Order ID</TableHead>
+                  <TableHead>Buyer</TableHead>
+                  <TableHead>Seller</TableHead>
+                  <TableHead>Account</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Fee</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Update</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((o) => (
+                  <TableRow key={o.id}>
+                    <TableCell className="pl-6 font-medium">
+                      #{o.id}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {o.buyerEmail}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {o.sellerEmail}
+                    </TableCell>
+                    <TableCell className="max-w-[180px] truncate text-muted-foreground">
                       {o.accountTitle}
-                    </p>
-                    <p className="mt-1 text-2xl font-semibold">
-                      {formatBDT(o.amount)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Platform fee: {formatBDT(o.platformFee)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2">
-                    <Clock className="h-4 w-4 text-amber-500" />
-                    <span className="text-sm font-medium tabular-nums">
-                      {timeRemaining(o.escrowDeadline)}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      remaining
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        releaseEscrow(o.id);
-                        toast.success(`Escrow released for #${o.id}`);
-                      }}
+                    </TableCell>
+                    <TableCell>{formatBDT(o.amount)}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatBDT(o.platformFee)}
+                    </TableCell>
+                    <TableCell>
+                      <OrderStatusBadge status={o.status} />
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {formatDateTime(o.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={o.status}
+                        onValueChange={(v) =>
+                          updateOrderStatus(o.id, v as OrderStatus)
+                        }
+                      >
+                        <SelectTrigger className="h-8 w-[130px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(
+                            [
+                              'PENDING',
+                              'VERIFYING',
+                              'COMPLETED',
+                              'CANCELLED',
+                              'DISPUTED',
+                            ] as OrderStatus[]
+                          ).map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {s.charAt(0) + s.slice(1).toLowerCase()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {filtered.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={9}
+                      className="py-10 text-center text-muted-foreground"
                     >
-                      <Unlock className="mr-1.5 h-3.5 w-3.5" />
-                      Release
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        extendEscrow(o.id, 6);
-                        toast.success(`Escrow extended by 6h for #${o.id}`);
-                      }}
-                    >
-                      <Plus className="mr-1.5 h-3.5 w-3.5" />
-                      Extend 6h
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {escrowOrders.length === 0 && (
-              <Card className="md:col-span-2 xl:col-span-3">
-                <CardContent className="py-10 text-center text-muted-foreground">
-                  No active escrows.
-                </CardContent>
-              </Card>
-            )}
+                      No orders match your search.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 }
