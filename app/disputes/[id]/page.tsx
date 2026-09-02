@@ -11,7 +11,6 @@ import {
   User as UserIcon,
   Store,
   MessageSquare,
-  Clock,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -394,7 +393,7 @@ function DisputeDetailContent() {
 
 export default function DisputeDetailPage() {
   return (
-    <AppShell>
+    <AppShell title="Dispute Details">
       <DisputeDetailContent />
     </AppShell>
   );
