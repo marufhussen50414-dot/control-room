@@ -1,5 +1,6 @@
 'use client';
 
+import { AppShell } from '@/components/app-shell';
 import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -197,7 +198,7 @@ function ChatThread({
   );
 }
 
-export default function DisputeDetailPage() {
+function DisputeDetailContent() {
   const params = useParams();
   const router = useRouter();
   const { db, addDisputeMessage, resolveDispute } = useApp();
@@ -388,5 +389,14 @@ export default function DisputeDetailPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// 🔥 মূল পেজ - AppShell দিয়ে র‍্যাপ করা
+export default function DisputeDetailPage() {
+  return (
+    <AppShell>
+      <DisputeDetailContent />
+    </AppShell>
   );
 }
