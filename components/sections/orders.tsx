@@ -124,10 +124,12 @@ export function OrderManagement() {
         />
       </div>
 
-      {/* 🔥 শুধু "All Orders" ট্যাব রাখা হয়েছে — "Active Escrows" এবং "Disputes" রিমুভ করা হয়েছে */}
+      {/* 🔥 শুধু "Disputes" ট্যাব রিমুভ করা হয়েছে — "Active Escrows" রেখেছি */}
       <Tabs defaultValue="all">
         <TabsList>
           <TabsTrigger value="all">All Orders</TabsTrigger>
+          <TabsTrigger value="escrow">Active Escrows</TabsTrigger>
+          {/* Disputes ট্যাব রিমুভ করা হয়েছে */}
         </TabsList>
 
         <TabsContent value="all">
@@ -218,79 +220,75 @@ export function OrderManagement() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
 
-      {/* 🔥 আলাদা Active Escrows সেকশন — নিচে যোগ করা হয়েছে */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold tracking-tight mb-4">
-          Active Escrows
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {escrowOrders.map((o) => (
-            <Card key={o.id}>
-              <CardContent className="space-y-4 p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Lock className="h-4 w-4 text-primary" />
-                    <span className="font-semibold">#{o.id}</span>
+        <TabsContent value="escrow">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {escrowOrders.map((o) => (
+              <Card key={o.id}>
+                <CardContent className="space-y-4 p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Lock className="h-4 w-4 text-primary" />
+                      <span className="font-semibold">#{o.id}</span>
+                    </div>
+                    <OrderStatusBadge status={o.status} />
                   </div>
-                  <OrderStatusBadge status={o.status} />
-                </div>
-                <div>
-                  <p className="truncate text-sm text-muted-foreground">
-                    {o.accountTitle}
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold">
-                    {formatBDT(o.amount)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Platform fee: {formatBDT(o.platformFee)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2">
-                  <Clock className="h-4 w-4 text-amber-500" />
-                  <span className="text-sm font-medium tabular-nums">
-                    {timeRemaining(o.escrowDeadline)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    remaining
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      releaseEscrow(o.id);
-                      toast.success(`Escrow released for #${o.id}`);
-                    }}
-                  >
-                    <Unlock className="mr-1.5 h-3.5 w-3.5" />
-                    Release
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      extendEscrow(o.id, 6);
-                      toast.success(`Escrow extended by 6h for #${o.id}`);
-                    }}
-                  >
-                    <Plus className="mr-1.5 h-3.5 w-3.5" />
-                    Extend 6h
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          {escrowOrders.length === 0 && (
-            <Card className="md:col-span-2 xl:col-span-3">
-              <CardContent className="py-10 text-center text-muted-foreground">
-                No active escrows.
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+                  <div>
+                    <p className="truncate text-sm text-muted-foreground">
+                      {o.accountTitle}
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold">
+                      {formatBDT(o.amount)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Platform fee: {formatBDT(o.platformFee)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2">
+                    <Clock className="h-4 w-4 text-amber-500" />
+                    <span className="text-sm font-medium tabular-nums">
+                      {timeRemaining(o.escrowDeadline)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      remaining
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        releaseEscrow(o.id);
+                        toast.success(`Escrow released for #${o.id}`);
+                      }}
+                    >
+                      <Unlock className="mr-1.5 h-3.5 w-3.5" />
+                      Release
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        extendEscrow(o.id, 6);
+                        toast.success(`Escrow extended by 6h for #${o.id}`);
+                      }}
+                    >
+                      <Plus className="mr-1.5 h-3.5 w-3.5" />
+                      Extend 6h
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {escrowOrders.length === 0 && (
+              <Card className="md:col-span-2 xl:col-span-3">
+                <CardContent className="py-10 text-center text-muted-foreground">
+                  No active escrows.
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
