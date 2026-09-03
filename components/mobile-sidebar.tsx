@@ -22,7 +22,8 @@ export function MobileSidebar({
   if (!currentUser) return null;
 
   const visibleItems = NAV_ITEMS.filter((item) => {
-    if (item.ownerOnly && currentUser.role !== 'owner') return false;
+    if (currentUser.role === 'owner') return true;
+    if (item.ownerOnly) return false;
     return currentUser.permissions[item.key];
   });
 
