@@ -81,6 +81,7 @@ export function DisputesReportsView({
   const { db, currentUser } = useApp();
   const [tab, setTab] = React.useState<CaseKind>(defaultTab);
   const [query, setQuery] = React.useState('');
+  const [navigatingId, setNavigatingId] = React.useState<string | null>(null);
 
   const disputeItems: CaseItem[] = (db.disputes ?? []).map((d) => ({
     kind: 'dispute',
@@ -111,12 +112,28 @@ export function DisputesReportsView({
   });
 
   const handleItemClick = (item: CaseItem) => {
+    setNavigatingId(item.id);
     if (item.kind === 'dispute') {
       router.push(`/disputes/${item.data.orderId}`);
     } else {
       router.push(`/reports/${item.id}`);
     }
   };
+
+  // Prefetch every visible item's detail route as soon as the list
+  // renders, so by the time someone actually clicks "View Details" the
+  // page is already loaded and the navigation feels instant instead of
+  // stalling on a cold network round-trip.
+  React.useEffect(() => {
+    filtered.forEach((item) => {
+      const href =
+        item.kind === 'dispute'
+          ? `/disputes/${item.data.orderId}`
+          : `/reports/${item.id}`;
+      router.prefetch(href);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, filtered.length]);
 
   return (
     <div className="space-y-6">
@@ -203,13 +220,20 @@ export function DisputesReportsView({
             )}
             {filtered.map((item) => {
               const sb = statusBadge(item);
+              const isNavigating = navigatingId === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => handleItemClick(item)}
-                  className="w-full text-left"
+                  disabled={navigatingId !== null}
+                  className="w-full text-left disabled:cursor-wait"
                 >
-                  <Card className="h-full transition-all hover:shadow-md hover:border-primary/50">
+                  <Card
+                    className={cn(
+                      'h-full transition-all hover:shadow-md hover:border-primary/50',
+                      isNavigating && 'opacity-60'
+                    )}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-sm font-semibold">
@@ -230,8 +254,13 @@ export function DisputesReportsView({
                         {formatDateTime(item.data.createdAt)}
                       </p>
                       <div className="mt-3 flex items-center justify-end text-xs text-primary">
-                        View Details
-                        <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                        {isNavigating ? 'Opening…' : 'View Details'}
+                        <ChevronRight
+                          className={cn(
+                            'ml-1 h-3.5 w-3.5',
+                            isNavigating && 'animate-pulse'
+                          )}
+                        />
                       </div>
                     </CardContent>
                   </Card>
