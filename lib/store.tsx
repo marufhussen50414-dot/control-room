@@ -19,6 +19,7 @@ import { uid } from '@/lib/format';
 import {
   ALL_SECTIONS,
   AVATAR_COLORS,
+  fullPermissions,
   seedAdmin,
   seedAudit,
   seedDisputes,
@@ -199,6 +200,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           const remote = byEmail.get(u.email);
           if (!remote) return u;
           byEmail.delete(u.email);
+          // Merge permissions key-by-key: a remote object saved before a
+          // newer section existed (e.g. "activeEscrows") must never erase
+          // that key locally — only keys it actually specifies win.
+          const mergedPermissions: Permissions = { ...u.permissions };
+          if (remote.permissions) {
+            for (const key of Object.keys(remote.permissions) as Array<
+              keyof Permissions
+            >) {
+              if (typeof remote.permissions[key] === 'boolean') {
+                mergedPermissions[key] = remote.permissions[key];
+              }
+            }
+          }
           return {
             ...u,
             name: remote.name || u.name,
@@ -206,15 +220,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             password: remote.password || u.password,
             role: remote.role || u.role,
             avatarColor: remote.avatarColor || u.avatarColor,
-            permissions:
-              remote.permissions && Object.keys(remote.permissions).length > 0
-                ? remote.permissions
-                : u.permissions,
+            permissions: mergedPermissions,
             paymentMethods: remote.paymentMethods || u.paymentMethods,
             metrics: remote.metrics || u.metrics,
             createdAt: remote.createdAt || u.createdAt,
           };
         });
+        // Safety net: the owner account must always keep full access, no
+        // matter what a synced permissions object says — new sections
+        // added later must never end up hidden from the owner.
+        for (const u of mergedUsers) {
+          if (u.role === 'owner') {
+            u.permissions = fullPermissions();
+          }
+        }
         // Safety net: a known seeded account (owner/admin/operators) must
         // never end up with a blank password after merging, even if the
         // locally saved copy was already corrupted by an older bug.
@@ -388,7 +407,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       persist(next);
       log('Set owner display name', currentUser ?? null, next);
       const owner = next.users.find((u) => u.role === 'owner');
-      if (owner) upsertMemberRemote(owner);
+      // Always sync the owner with full permissions — the owner must
+      // never end up locked out of a section by stale synced data.
+      if (owner) upsertMemberRemote({ ...owner, permissions: fullPermissions() });
     },
     [db, persist, log, currentUser]
   );
@@ -402,7 +423,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         users: db.users.map((u) => (u.id === currentUser.id ? updatedUser : u)),
       };
       persist(next);
-      upsertMemberRemote(updatedUser);
+      upsertMemberRemote(
+        updatedUser.role === 'owner'
+          ? { ...updatedUser, permissions: fullPermissions() }
+          : updatedUser
+      );
     },
     [db, currentUser, persist]
   );
