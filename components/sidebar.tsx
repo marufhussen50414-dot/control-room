@@ -18,7 +18,12 @@ export function Sidebar({
   if (!currentUser) return null;
 
   const visibleItems = NAV_ITEMS.filter((item) => {
-    if (item.ownerOnly && currentUser.role !== 'owner') return false;
+    // Owner always sees every section, no matter what — new sections added
+    // later, or a permissions object that hasn't caught up with them yet
+    // (e.g. after a cross-device sync), must never hide anything from the
+    // owner. Only non-owner members are gated by their saved permissions.
+    if (currentUser.role === 'owner') return true;
+    if (item.ownerOnly) return false;
     return currentUser.permissions[item.key];
   });
 
