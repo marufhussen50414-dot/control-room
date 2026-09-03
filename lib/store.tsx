@@ -226,21 +226,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             createdAt: remote.createdAt || u.createdAt,
           };
         });
+        // Safety net: a known seeded account (owner/admin/operators) must
+        // never have its identity fields corrupted by an incomplete
+        // remote row — e.g. an old row saved before `role` was synced
+        // defaults to 'operator', which would silently demote the owner.
+        // For these fixed accounts, the seed is the source of truth for
+        // role (and password, if it somehow ended up blank). This MUST
+        // run before the "owner keeps full permissions" check below, or
+        // that check would still be looking at the corrupted role.
+        for (const u of mergedUsers) {
+          const seed = seedByEmail.get(u.email);
+          if (!seed) continue;
+          if (u.role !== seed.role) u.role = seed.role;
+          if (!u.password) u.password = seed.password;
+        }
         // Safety net: the owner account must always keep full access, no
         // matter what a synced permissions object says — new sections
         // added later must never end up hidden from the owner.
         for (const u of mergedUsers) {
           if (u.role === 'owner') {
             u.permissions = fullPermissions();
-          }
-        }
-        // Safety net: a known seeded account (owner/admin/operators) must
-        // never end up with a blank password after merging, even if the
-        // locally saved copy was already corrupted by an older bug.
-        for (const u of mergedUsers) {
-          if (!u.password) {
-            const seed = seedByEmail.get(u.email);
-            if (seed) u.password = seed.password;
           }
         }
         // Members added on another device that aren't in the local seed list.
