@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AppProvider } from '@/lib/store';
+import { SectionProvider } from '@/lib/section-context';
+import { AppChrome } from '@/components/app-chrome';
 import { Toaster } from '@/components/ui/sonner';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -30,7 +32,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AppProvider>
-            {children}
+            <SectionProvider>
+              <AppChrome>{children}</AppChrome>
+            </SectionProvider>
             <Toaster position="top-right" />
           </AppProvider>
         </ThemeProvider>
