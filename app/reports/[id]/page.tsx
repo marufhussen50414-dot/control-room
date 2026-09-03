@@ -1,8 +1,8 @@
 'use client';
 
-import { AppShell } from '@/components/app-shell';
 import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useSection } from '@/lib/section-context';
 import {
   ArrowLeft,
   Play,
@@ -407,9 +407,10 @@ function ReportDetailContent() {
 }
 
 export default function ReportDetailPage() {
-  return (
-    <AppShell title="Report Details">
-      <ReportDetailContent />
-    </AppShell>
-  );
+  const { setSection } = useSection();
+  React.useEffect(() => {
+    setSection('disputes');
+  }, [setSection]);
+
+  return <ReportDetailContent />;
 }
