@@ -1,8 +1,8 @@
 'use client';
 
-import { AppShell } from '@/components/app-shell';
 import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useSection } from '@/lib/section-context';
 import {
   ArrowLeft,
   Eye,
@@ -392,9 +392,10 @@ function DisputeDetailContent() {
 }
 
 export default function DisputeDetailPage() {
-  return (
-    <AppShell title="Dispute Details">
-      <DisputeDetailContent />
-    </AppShell>
-  );
+  const { setSection } = useSection();
+  React.useEffect(() => {
+    setSection('disputes');
+  }, [setSection]);
+
+  return <DisputeDetailContent />;
 }
