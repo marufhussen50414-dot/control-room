@@ -280,21 +280,6 @@ function ReportDetailContent() {
         </Badge>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <PartyCard
-          role="Buyer"
-          name={report.buyerName}
-          email={report.buyerEmail}
-          highlight={report.reportedBy === 'buyer'}
-        />
-        <PartyCard
-          role="Seller"
-          name={report.sellerName}
-          email={report.sellerEmail}
-          highlight={report.reportedBy === 'seller'}
-        />
-      </div>
-
       <Card className="flex h-[520px] flex-col">
         <CardContent className="flex h-full min-h-0 flex-col p-5">
           <h3 className="mb-3 flex items-center gap-2 font-semibold">
@@ -340,16 +325,18 @@ function ReportDetailContent() {
         </CardContent>
       </Card>
 
+      {/* Report Details — the case-level facts (category, related order,
+          date), not tied to either party. */}
       <Card>
         <CardContent className="space-y-4 p-5">
+          <h3 className="font-semibold">Report Details</h3>
           <div className="rounded-lg border bg-muted/30 p-3">
             <h4 className="mb-1.5 flex items-center gap-2 text-xs font-semibold">
               <ShieldAlert className="h-3.5 w-3.5" />
-              Report Details
+              {REPORT_CATEGORY_LABEL[report.category]}
             </h4>
-            <p className="text-sm text-muted-foreground">{report.description}</p>
             {report.orderId && (
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Related Order: #{report.orderId}
               </p>
             )}
@@ -357,17 +344,6 @@ function ReportDetailContent() {
               {formatDateTime(report.createdAt)}
             </p>
           </div>
-
-          {(report.attachments?.length ?? 0) > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-muted-foreground">
-                Attachments &amp; Screen Recordings
-              </h4>
-              {report.attachments.map((a) => (
-                <AttachmentCard key={a.id} a={a} />
-              ))}
-            </div>
-          )}
 
           {isOpen && (
             <div className="flex flex-wrap gap-2 border-t pt-4">
@@ -402,6 +378,81 @@ function ReportDetailContent() {
           )}
         </CardContent>
       </Card>
+
+      {/* Buyer & Seller — kept fully separate: whichever party filed the
+          report shows their statement, and each party shows only the
+          video/attachments they themselves uploaded. */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="border-blue-200 dark:border-blue-500/20">
+          <CardContent className="space-y-3 p-5">
+            <PartyCard
+              role="Buyer"
+              name={report.buyerName}
+              email={report.buyerEmail}
+              highlight={report.reportedBy === 'buyer'}
+            />
+            {report.reportedBy === 'buyer' ? (
+              <div>
+                <h4 className="mb-1.5 text-xs font-semibold text-blue-700 dark:text-blue-400">
+                  Buyer&apos;s Statement
+                </h4>
+                <p className="text-sm text-muted-foreground">{report.description}</p>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                No statement filed by the buyer.
+              </p>
+            )}
+            {report.attachments.filter((a) => a.uploadedBy === 'buyer').length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold text-muted-foreground">
+                  Buyer&apos;s Attachments &amp; Screen Recordings
+                </h4>
+                {report.attachments
+                  .filter((a) => a.uploadedBy === 'buyer')
+                  .map((a) => (
+                    <AttachmentCard key={a.id} a={a} />
+                  ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-emerald-200 dark:border-emerald-500/20">
+          <CardContent className="space-y-3 p-5">
+            <PartyCard
+              role="Seller"
+              name={report.sellerName}
+              email={report.sellerEmail}
+              highlight={report.reportedBy === 'seller'}
+            />
+            {report.reportedBy === 'seller' ? (
+              <div>
+                <h4 className="mb-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                  Seller&apos;s Statement
+                </h4>
+                <p className="text-sm text-muted-foreground">{report.description}</p>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                No statement filed by the seller.
+              </p>
+            )}
+            {report.attachments.filter((a) => a.uploadedBy === 'seller').length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold text-muted-foreground">
+                  Seller&apos;s Attachments &amp; Screen Recordings
+                </h4>
+                {report.attachments
+                  .filter((a) => a.uploadedBy === 'seller')
+                  .map((a) => (
+                    <AttachmentCard key={a.id} a={a} />
+                  ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
