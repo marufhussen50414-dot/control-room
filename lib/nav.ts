@@ -8,7 +8,7 @@ import {
   Users,
   Settings,
   ScrollText,
-  Lock, // 🔥 Lock আইকন ইম্পোর্ট করুন
+  Lock,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -20,10 +20,10 @@ export const NAV_ITEMS: {
 }[] = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'orders', label: 'Order Management', icon: Package },
-  { key: 'activeEscrows', label: 'Active Escrows', icon: Lock }, // 🔥 এই লাইনটি যোগ করুন
+  { key: 'activeEscrows', label: 'Active Escrows', icon: Lock },
   { key: 'disputes', label: 'Disputes & Reports', icon: Gavel },
-  { key: 'payouts', label: 'Payout Management', icon: Wallet },
-  { key: 'finance', label: 'Financial Overview', icon: BarChart3 },
+  { key: 'payouts', label: 'Financial Overview', icon: BarChart3 }, // 🔥 লেবেল পরিবর্তন + আইকন পরিবর্তন
+  // { key: 'finance', label: 'Financial Overview', icon: BarChart3 }, // 🔥 এই লাইন ডিলিট করুন
   { key: 'members', label: 'Member Management', icon: Users, ownerOnly: true },
   { key: 'account', label: 'Account Settings', icon: Settings },
   { key: 'audit', label: 'System Audit Log', icon: ScrollText },
