@@ -271,6 +271,51 @@ function DisputeDetailContent() {
         <PartyCard role="Seller" name={dispute.sellerName} email={dispute.sellerEmail} />
       </div>
 
+      <Card className="flex h-[520px] flex-col">
+        <CardContent className="flex h-full min-h-0 flex-col p-5">
+          <h3 className="mb-3 flex items-center gap-2 font-semibold">
+            <MessageSquare className="h-4 w-4" />
+            Mediation Chat
+          </h3>
+          <Tabs
+            value={chatChannel}
+            onValueChange={(v) => setChatChannel(v as ChatChannel)}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <TabsList className="w-full">
+              <TabsTrigger value="group" className="flex-1">
+                <Users className="mr-1.5 h-3.5 w-3.5" />
+                3-Way
+              </TabsTrigger>
+              <TabsTrigger value="buyer" className="flex-1">
+                <UserIcon className="mr-1.5 h-3.5 w-3.5" />
+                Buyer
+              </TabsTrigger>
+              <TabsTrigger value="seller" className="flex-1">
+                <Store className="mr-1.5 h-3.5 w-3.5" />
+                Seller
+              </TabsTrigger>
+            </TabsList>
+            {(['group', 'buyer', 'seller'] as ChatChannel[]).map((ch) => (
+              <TabsContent key={ch} value={ch} className="mt-2 min-h-0 flex-1">
+                <ChatThread
+                  messages={(dispute.messages ?? []).filter(
+                    (m) => m.channel === ch
+                  )}
+                  emptyLabel={
+                    ch === 'group'
+                      ? 'No messages yet in the 3-way chat.'
+                      : `No private messages with the ${ch} yet. Only you and the ${ch} can see this thread.`
+                  }
+                  onSend={handleSend}
+                  disabled={!isOpen}
+                />
+              </TabsContent>
+            ))}
+          </Tabs>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent className="space-y-4 p-5">
           <div className="rounded-lg border bg-muted/30 p-3 text-sm">
@@ -340,51 +385,6 @@ function DisputeDetailContent() {
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      <Card className="flex h-[520px] flex-col">
-        <CardContent className="flex h-full min-h-0 flex-col p-5">
-          <h3 className="mb-3 flex items-center gap-2 font-semibold">
-            <MessageSquare className="h-4 w-4" />
-            Mediation Chat
-          </h3>
-          <Tabs
-            value={chatChannel}
-            onValueChange={(v) => setChatChannel(v as ChatChannel)}
-            className="flex min-h-0 flex-1 flex-col"
-          >
-            <TabsList className="w-full">
-              <TabsTrigger value="group" className="flex-1">
-                <Users className="mr-1.5 h-3.5 w-3.5" />
-                3-Way
-              </TabsTrigger>
-              <TabsTrigger value="buyer" className="flex-1">
-                <UserIcon className="mr-1.5 h-3.5 w-3.5" />
-                Buyer
-              </TabsTrigger>
-              <TabsTrigger value="seller" className="flex-1">
-                <Store className="mr-1.5 h-3.5 w-3.5" />
-                Seller
-              </TabsTrigger>
-            </TabsList>
-            {(['group', 'buyer', 'seller'] as ChatChannel[]).map((ch) => (
-              <TabsContent key={ch} value={ch} className="mt-2 min-h-0 flex-1">
-                <ChatThread
-                  messages={(dispute.messages ?? []).filter(
-                    (m) => m.channel === ch
-                  )}
-                  emptyLabel={
-                    ch === 'group'
-                      ? 'No messages yet in the 3-way chat.'
-                      : `No private messages with the ${ch} yet. Only you and the ${ch} can see this thread.`
-                  }
-                  onSend={handleSend}
-                  disabled={!isOpen}
-                />
-              </TabsContent>
-            ))}
-          </Tabs>
         </CardContent>
       </Card>
     </div>
