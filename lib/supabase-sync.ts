@@ -135,6 +135,30 @@ export async function fetchProfileName(email: string): Promise<string | null> {
   }
 }
 
+/**
+ * True/false when the check succeeded, null when it couldn't be
+ * determined (network error etc) — callers must never treat null as
+ * "doesn't exist", or a transient failure would force-logout everyone.
+ */
+export async function checkMemberExists(email: string): Promise<boolean | null> {
+  if (!email) return null;
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle();
+    if (error) {
+      logErr('failed to check member still exists', error);
+      return null;
+    }
+    return !!data;
+  } catch (err) {
+    logErr('failed to check member still exists', err);
+    return null;
+  }
+}
+
 export async function upsertProfileName(email: string, name: string) {
   if (!email || !name.trim()) return;
   try {
