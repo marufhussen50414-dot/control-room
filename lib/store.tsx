@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { toast } from 'sonner';
 import type {
   AuditEntry,
   ChatChannel,
@@ -32,6 +33,7 @@ import {
 } from '@/lib/mock-data';
 import { OWNER_CONFIG } from '@/src/config/ownerConfig';
 import {
+  checkMemberExists,
   deleteMemberRemote,
   fetchAuditRemote,
   fetchDisputesRemote,
@@ -196,36 +198,41 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           ])
         );
         const byEmail = new Map(remoteMembers.map((m) => [m.email, m.user]));
-        const mergedUsers = local.users.map((u) => {
-          const remote = byEmail.get(u.email);
-          if (!remote) return u;
-          byEmail.delete(u.email);
-          // Merge permissions key-by-key: a remote object saved before a
-          // newer section existed (e.g. "activeEscrows") must never erase
-          // that key locally — only keys it actually specifies win.
-          const mergedPermissions: Permissions = { ...u.permissions };
-          if (remote.permissions) {
-            for (const key of Object.keys(remote.permissions) as Array<
-              keyof Permissions
-            >) {
-              if (typeof remote.permissions[key] === 'boolean') {
-                mergedPermissions[key] = remote.permissions[key];
+        const mergedUsers = local.users
+          // A locally cached member who's neither a fixed seed account
+          // nor present in the (successfully fetched) remote list was
+          // removed on another device — drop them here too.
+          .filter((u) => seedByEmail.has(u.email) || byEmail.has(u.email))
+          .map((u) => {
+            const remote = byEmail.get(u.email);
+            if (!remote) return u;
+            byEmail.delete(u.email);
+            // Merge permissions key-by-key: a remote object saved before a
+            // newer section existed (e.g. "activeEscrows") must never erase
+            // that key locally — only keys it actually specifies win.
+            const mergedPermissions: Permissions = { ...u.permissions };
+            if (remote.permissions) {
+              for (const key of Object.keys(remote.permissions) as Array<
+                keyof Permissions
+              >) {
+                if (typeof remote.permissions[key] === 'boolean') {
+                  mergedPermissions[key] = remote.permissions[key];
+                }
               }
             }
-          }
-          return {
-            ...u,
-            name: remote.name || u.name,
-            phone: remote.phone || u.phone,
-            password: remote.password || u.password,
-            role: remote.role || u.role,
-            avatarColor: remote.avatarColor || u.avatarColor,
-            permissions: mergedPermissions,
-            paymentMethods: remote.paymentMethods || u.paymentMethods,
-            metrics: remote.metrics || u.metrics,
-            createdAt: remote.createdAt || u.createdAt,
-          };
-        });
+            return {
+              ...u,
+              name: remote.name || u.name,
+              phone: remote.phone || u.phone,
+              password: remote.password || u.password,
+              role: remote.role || u.role,
+              avatarColor: remote.avatarColor || u.avatarColor,
+              permissions: mergedPermissions,
+              paymentMethods: remote.paymentMethods || u.paymentMethods,
+              metrics: remote.metrics || u.metrics,
+              createdAt: remote.createdAt || u.createdAt,
+            };
+          });
         // Safety net: a known seeded account (owner/admin/operators) must
         // never have its identity fields corrupted by an incomplete
         // remote row — e.g. an old row saved before `role` was synced
@@ -401,6 +408,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(SESSION_KEY);
     setCurrentUserId(null);
   }, []);
+
+  // If this member (never the owner, who can't be removed) gets deleted
+  // from another device while they're actively using the app, sign them
+  // out as soon as we notice — not just on their next page load.
+  React.useEffect(() => {
+    if (!currentUser || currentUser.role === 'owner') return;
+    const email = currentUser.email;
+    const interval = setInterval(async () => {
+      const exists = await checkMemberExists(email);
+      if (exists === false) {
+        logout();
+        toast.error('Your account access was removed. You have been signed out.');
+      }
+    }, 20000);
+    return () => clearInterval(interval);
+  }, [currentUser, logout]);
 
   const setOwnerDisplayName = React.useCallback(
     (name: string) => {
