@@ -6,7 +6,6 @@ export type SectionKey =
   | 'activeEscrows'
   | 'disputes'
   | 'payouts'
-  | 'finance'
   | 'members'
   | 'account'
   | 'audit';
