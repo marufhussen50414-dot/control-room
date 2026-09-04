@@ -266,11 +266,6 @@ function DisputeDetailContent() {
         </Badge>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <PartyCard role="Buyer" name={dispute.buyerName} email={dispute.buyerEmail} />
-        <PartyCard role="Seller" name={dispute.sellerName} email={dispute.sellerEmail} />
-      </div>
-
       <Card className="flex h-[520px] flex-col">
         <CardContent className="flex h-full min-h-0 flex-col p-5">
           <h3 className="mb-3 flex items-center gap-2 font-semibold">
@@ -316,8 +311,10 @@ function DisputeDetailContent() {
         </CardContent>
       </Card>
 
+      {/* Order Details — everything about the order/dispute itself. */}
       <Card>
         <CardContent className="space-y-4 p-5">
+          <h3 className="font-semibold">Order Details</h3>
           <div className="rounded-lg border bg-muted/30 p-3 text-sm">
             <span className="text-muted-foreground">Order: </span>
             <span className="font-medium">{dispute.accountTitle}</span>
@@ -327,22 +324,10 @@ function DisputeDetailContent() {
               {formatDateTime(dispute.createdAt)}
             </span>
           </div>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-3 dark:border-blue-500/20 dark:bg-blue-500/5">
-              <h4 className="mb-1.5 text-xs font-semibold text-blue-700 dark:text-blue-400">
-                Buyer Evidence
-              </h4>
-              <p className="text-sm text-muted-foreground">{dispute.buyerEvidence}</p>
-            </div>
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 dark:border-emerald-500/20 dark:bg-emerald-500/5">
-              <h4 className="mb-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                Seller Evidence
-              </h4>
-              <p className="text-sm text-muted-foreground">{dispute.sellerEvidence}</p>
-            </div>
+          <div className="text-sm">
+            <span className="text-muted-foreground">Dispute reason: </span>
+            <span>{dispute.reason}</span>
           </div>
-
           <div className="rounded-lg border bg-muted/30 p-3">
             <h4 className="mb-2 flex items-center gap-2 text-xs font-semibold">
               <Eye className="h-3.5 w-3.5" />
@@ -352,17 +337,6 @@ function DisputeDetailContent() {
               {dispute.credentials}
             </pre>
           </div>
-
-          {(dispute.attachments?.length ?? 0) > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-muted-foreground">
-                Attachments &amp; Screen Recordings
-              </h4>
-              {dispute.attachments.map((a) => (
-                <AttachmentCard key={a.id} a={a} />
-              ))}
-            </div>
-          )}
 
           {isOpen && (
             <div className="flex flex-wrap gap-2 border-t pt-4">
@@ -387,6 +361,59 @@ function DisputeDetailContent() {
           )}
         </CardContent>
       </Card>
+
+      {/* Buyer & Seller — each party's side of the story, kept fully
+          separate: their statement and only the video/attachments they
+          themselves uploaded. */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="border-blue-200 dark:border-blue-500/20">
+          <CardContent className="space-y-3 p-5">
+            <PartyCard role="Buyer" name={dispute.buyerName} email={dispute.buyerEmail} />
+            <div>
+              <h4 className="mb-1.5 text-xs font-semibold text-blue-700 dark:text-blue-400">
+                Buyer&apos;s Statement
+              </h4>
+              <p className="text-sm text-muted-foreground">{dispute.buyerEvidence}</p>
+            </div>
+            {dispute.attachments.filter((a) => a.uploadedBy === 'buyer').length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold text-muted-foreground">
+                  Buyer&apos;s Attachments &amp; Screen Recordings
+                </h4>
+                {dispute.attachments
+                  .filter((a) => a.uploadedBy === 'buyer')
+                  .map((a) => (
+                    <AttachmentCard key={a.id} a={a} />
+                  ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-emerald-200 dark:border-emerald-500/20">
+          <CardContent className="space-y-3 p-5">
+            <PartyCard role="Seller" name={dispute.sellerName} email={dispute.sellerEmail} />
+            <div>
+              <h4 className="mb-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                Seller&apos;s Statement
+              </h4>
+              <p className="text-sm text-muted-foreground">{dispute.sellerEvidence}</p>
+            </div>
+            {dispute.attachments.filter((a) => a.uploadedBy === 'seller').length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold text-muted-foreground">
+                  Seller&apos;s Attachments &amp; Screen Recordings
+                </h4>
+                {dispute.attachments
+                  .filter((a) => a.uploadedBy === 'seller')
+                  .map((a) => (
+                    <AttachmentCard key={a.id} a={a} />
+                  ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
