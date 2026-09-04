@@ -23,9 +23,9 @@ export default function Home() {
     case 'disputes':
       return <DisputesReportsView />;
     case 'payouts':
-      return <PayoutFinance />;
+      return <PayoutFinance mode="payouts" />;
     case 'finance':
-      return <PayoutFinance />;
+      return <PayoutFinance mode="finance" />;
     case 'members':
       return <Members />;
     case 'account':
