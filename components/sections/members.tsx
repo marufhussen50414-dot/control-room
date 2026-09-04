@@ -117,7 +117,12 @@ export function Members() {
           Admin (1 slot)
         </h2>
         {admin ? (
-          <MemberRow user={admin} onEdit={setEditTarget} onPw={setPwTarget} />
+          <MemberRow
+            user={admin}
+            onEdit={setEditTarget}
+            onPw={setPwTarget}
+            onDelete={setDeleteTarget}
+          />
         ) : (
           <Card className="border-dashed">
             <CardContent className="py-8 text-center text-sm text-muted-foreground">
@@ -319,14 +324,18 @@ function AddMemberDialog({
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [role, setRole] = React.useState<Role>('operator');
-  const [perms, setPerms] = React.useState<Permissions>(emptyPermissions());
+  const [perms, setPerms] = React.useState<Permissions>({
+    ...emptyPermissions(),
+    dashboard: true,
+    account: true,
+  });
 
   const reset = () => {
     setName('');
     setEmail('');
     setPassword('');
     setRole('operator');
-    setPerms(emptyPermissions());
+    setPerms({ ...emptyPermissions(), dashboard: true, account: true });
   };
 
   const submit = () => {
@@ -334,7 +343,10 @@ function AddMemberDialog({
       toast.error('Please fill all fields');
       return;
     }
-    onAdd({ name: name.trim(), email: email.trim(), password, role, permissions: perms });
+    // Dashboard and Account Settings are mandatory for every member,
+    // regardless of what's toggled in the (hidden) rest of the form.
+    const finalPerms: Permissions = { ...perms, dashboard: true, account: true };
+    onAdd({ name: name.trim(), email: email.trim(), password, role, permissions: finalPerms });
     toast.success(`${name.trim()} added as ${role}`);
     reset();
     onOpenChange(false);
@@ -396,7 +408,13 @@ function AddMemberDialog({
               Toggling off a section hides it from this member&apos;s sidebar.
             </p>
             <div className="grid grid-cols-2 gap-2 rounded-lg border p-3">
-              {ALL_SECTIONS.filter((s) => s.key !== 'members' && s.key !== 'audit').map((s) => (
+              {ALL_SECTIONS.filter(
+                (s) =>
+                  s.key !== 'members' &&
+                  s.key !== 'audit' &&
+                  s.key !== 'dashboard' &&
+                  s.key !== 'account'
+              ).map((s) => (
                 <label
                   key={s.key}
                   className="flex items-center gap-2 text-sm"
@@ -462,7 +480,13 @@ function EditMemberDialog({
           <div className="space-y-2">
             <Label>Section Permissions</Label>
             <div className="grid grid-cols-2 gap-2 rounded-lg border p-3">
-              {ALL_SECTIONS.filter((s) => s.key !== 'members' && s.key !== 'audit').map((s) => (
+              {ALL_SECTIONS.filter(
+                (s) =>
+                  s.key !== 'members' &&
+                  s.key !== 'audit' &&
+                  s.key !== 'dashboard' &&
+                  s.key !== 'account'
+              ).map((s) => (
                 <label key={s.key} className="flex items-center gap-2 text-sm">
                   <Checkbox
                     checked={perms[s.key]}
@@ -482,7 +506,10 @@ function EditMemberDialog({
           </Button>
           <Button
             onClick={() => {
-              onSave(target.id, { name, permissions: perms });
+              onSave(target.id, {
+                name,
+                permissions: { ...perms, dashboard: true, account: true },
+              });
               toast.success(`${name} updated`);
               onClose();
             }}
