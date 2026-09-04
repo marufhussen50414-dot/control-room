@@ -1,4 +1,4 @@
-import type { SectionKey } from '@/lib/types';
+import type { SectionKey } from '@/lib/types'; 
 import {
   LayoutDashboard,
   Package,
