@@ -78,8 +78,8 @@ export function AppShell({
         return <DisputesReportsView />;
       case 'payouts':
         return <PayoutFinance />;
-      // case 'finance':  // 🔥 এই লাইন ডিলিট করুন
-      //   return <PayoutFinance />;
+      case 'finance':
+        return <PayoutFinance />;
       case 'members':
         return <Members />;
       case 'account':
