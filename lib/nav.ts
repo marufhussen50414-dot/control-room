@@ -4,7 +4,7 @@ import {
   Package,
   Gavel,
   Wallet,
-  BarChart3,
+  BarChart3, 
   Users,
   Settings,
   ScrollText,
