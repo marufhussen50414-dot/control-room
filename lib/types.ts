@@ -1,6 +1,6 @@
 export type Role = 'owner' | 'admin' | 'operator';
 
-export type SectionKey =
+export type SectionKey = 
   | 'dashboard'
   | 'orders'
   | 'activeEscrows'
