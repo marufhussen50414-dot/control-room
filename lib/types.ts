@@ -9,7 +9,8 @@ export type SectionKey =
   | 'finance'
   | 'members'
   | 'account'
-  | 'audit';
+  | 'audit'
+  | 'liveMarketplace';
 
 export type Permissions = Record<SectionKey, boolean>;
 
@@ -140,4 +141,3 @@ export type AuditEntry = {
 export type PlatformSettings = {
   feePercent: number;
 };
- 
