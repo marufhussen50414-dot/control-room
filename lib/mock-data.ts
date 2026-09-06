@@ -14,11 +14,12 @@ import { OWNER_CONFIG } from '@/src/config/ownerConfig';
 export const ALL_SECTIONS: { key: SectionKey; label: string }[] = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'orders', label: 'Order Management' },
-  { key: 'activeEscrows', label: 'Active Escrows' }, // 🔥 নতুন যোগ করা হয়েছে
+  { key: 'activeEscrows', label: 'Active Escrows' },
   { key: 'disputes', label: 'Disputes & Reports' },
   { key: 'payouts', label: 'Payout Management' },
   { key: 'finance', label: 'Financial Overview' },
   { key: 'members', label: 'Member Management' },
+  { key: 'liveMarketplace', label: 'Live Marketplace' },
   { key: 'account', label: 'Account Settings' },
   { key: 'audit', label: 'System Audit Log' },
 ];
@@ -93,11 +94,12 @@ export function seedOperators(): User[] {
       permissions: {
         dashboard: true,
         orders: true,
-        activeEscrows: true, // 🔥 যোগ করা হয়েছে
+        activeEscrows: true,
         disputes: true,
         payouts: false,
         finance: false,
         members: false,
+        liveMarketplace: false,
         account: true,
         audit: false,
       },
@@ -116,11 +118,12 @@ export function seedOperators(): User[] {
       permissions: {
         dashboard: true,
         orders: true,
-        activeEscrows: true, // 🔥 যোগ করা হয়েছে
+        activeEscrows: true,
         disputes: false,
         payouts: true,
         finance: false,
         members: false,
+        liveMarketplace: false,
         account: true,
         audit: false,
       },
