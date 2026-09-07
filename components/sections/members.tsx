@@ -413,7 +413,6 @@ function AddMemberDialog({
                   s.key !== 'members' &&
                   s.key !== 'audit' &&
                   s.key !== 'dashboard' &&
-                  s.key !== 'liveMarketplace' &&
                   s.key !== 'account'
               ).map((s) => (
                 <label
@@ -486,7 +485,6 @@ function EditMemberDialog({
                   s.key !== 'members' &&
                   s.key !== 'audit' &&
                   s.key !== 'dashboard' &&
-                  s.key !== 'liveMarketplace' &&
                   s.key !== 'account'
               ).map((s) => (
                 <label key={s.key} className="flex items-center gap-2 text-sm">
