@@ -598,4 +598,4 @@ export async function updateSettingsRemote(feePercent: number) {
     logErr('failed to update settings', err);
   }
 }
- 
+
