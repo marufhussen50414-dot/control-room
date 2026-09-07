@@ -1,6 +1,6 @@
 export type Role = 'owner' | 'admin' | 'operator';
 
-export type SectionKey = 
+export type SectionKey =
   | 'dashboard'
   | 'orders'
   | 'activeEscrows'
@@ -9,8 +9,7 @@ export type SectionKey =
   | 'finance'
   | 'members'
   | 'account'
-  | 'audit'
-  | 'liveMarketplace';
+  | 'audit';
 
 export type Permissions = Record<SectionKey, boolean>;
 

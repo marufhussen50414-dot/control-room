@@ -19,7 +19,6 @@ export const ALL_SECTIONS: { key: SectionKey; label: string }[] = [
   { key: 'payouts', label: 'Payout Management' },
   { key: 'finance', label: 'Financial Overview' },
   { key: 'members', label: 'Member Management' },
-  { key: 'liveMarketplace', label: 'Live Marketplace' },
   { key: 'account', label: 'Account Settings' },
   { key: 'audit', label: 'System Audit Log' },
 ];
@@ -99,7 +98,6 @@ export function seedOperators(): User[] {
         payouts: false,
         finance: false,
         members: false,
-        liveMarketplace: false,
         account: true,
         audit: false,
       },
@@ -123,7 +121,6 @@ export function seedOperators(): User[] {
         payouts: true,
         finance: false,
         members: false,
-        liveMarketplace: false,
         account: true,
         audit: false,
       },

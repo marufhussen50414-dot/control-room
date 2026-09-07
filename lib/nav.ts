@@ -9,7 +9,6 @@ import {
   Settings,
   ScrollText,
   Lock,
-  Globe,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -26,12 +25,6 @@ export const NAV_ITEMS: {
   { key: 'payouts', label: 'Payout Management', icon: Wallet },
   { key: 'finance', label: 'Financial Overview', icon: BarChart3 },
   { key: 'members', label: 'Member Management', icon: Users, ownerOnly: true },
-  {
-    key: 'liveMarketplace',
-    label: 'Live Marketplace',
-    icon: Globe,
-    ownerOnly: true,
-  },
   { key: 'account', label: 'Account Settings', icon: Settings },
   { key: 'audit', label: 'System Audit Log', icon: ScrollText },
 ];
