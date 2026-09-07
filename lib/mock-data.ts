@@ -264,3 +264,4 @@ export function seedAudit(): AuditEntry[] {
 export function seedSettings(): PlatformSettings {
   return { feePercent: 8 };
 }
+ 
