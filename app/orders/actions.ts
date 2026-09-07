@@ -19,7 +19,7 @@ export async function getOrders() {
 
   if (error) throw error
 
-  // UI-এর জন্য সহজ format করে দিলাম
+  // UI-এর জন্য সহজ format করে দেওয়া
   return data.map((o: any) => ({
     id: o.id,
     account: o.listing?.title ?? '—',
@@ -30,4 +30,13 @@ export async function getOrders() {
     status: o.status,
     createdAt: o.created_at,
   }))
+}
+
+export async function updateOrderStatus(orderId: string, status: string) {
+  const { error } = await supabaseAdmin
+    .from('orders')
+    .update({ status })
+    .eq('id', orderId)
+
+  if (error) throw error
 }
