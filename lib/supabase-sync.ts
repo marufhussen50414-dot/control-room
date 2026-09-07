@@ -175,85 +175,35 @@ export async function upsertProfileName(email: string, name: string) {
 }
 
 // ============================================================
-// Orders
+// Orders (bolt-website এর আসল orders টেবিল থেকে /api/orders দিয়ে আসে)
 // ============================================================
-
-type OrderRow = {
-  id: number;
-  buyer_email: string | null;
-  seller_email: string | null;
-  account_title: string | null;
-  amount: number | null;
-  platform_fee: number | null;
-  status: string | null;
-  escrow_locked: boolean | null;
-  escrow_deadline: string | null;
-  created_at: string;
-};
-
-function rowToOrder(row: OrderRow): Order {
-  return {
-    id: row.id,
-    buyerEmail: row.buyer_email ?? '',
-    sellerEmail: row.seller_email ?? '',
-    accountTitle: row.account_title ?? '',
-    amount: row.amount ?? 0,
-    platformFee: row.platform_fee ?? 0,
-    status: (row.status as Order['status']) || 'PENDING',
-    escrowLocked: !!row.escrow_locked,
-    escrowDeadline: row.escrow_deadline ?? new Date().toISOString(),
-    createdAt: row.created_at,
-  };
-}
-
-function orderToRow(o: Order) {
-  return {
-    id: o.id,
-    buyer_email: o.buyerEmail,
-    seller_email: o.sellerEmail,
-    account_title: o.accountTitle,
-    amount: o.amount,
-    platform_fee: o.platformFee,
-    status: o.status,
-    escrow_locked: o.escrowLocked,
-    escrow_deadline: o.escrowDeadline,
-    created_at: o.createdAt,
-  };
-}
 
 export async function fetchOrdersRemote(): Promise<Order[] | null> {
   try {
-    const { data, error } = await supabase.from('orders').select('*');
-    if (error || !data) {
-      if (error) logErr('failed to fetch orders', error);
+    const res = await fetch('/api/orders', { cache: 'no-store' });
+    if (!res.ok) {
+      logErr('failed to fetch orders', await res.text());
       return null;
     }
-    return (data as OrderRow[]).map(rowToOrder);
+    return await res.json();
   } catch (err) {
     logErr('failed to fetch orders', err);
     return null;
   }
 }
 
-export async function seedOrdersRemote(orders: Order[]) {
-  if (orders.length === 0) return;
-  try {
-    const { error } = await supabase.from('orders').insert(orders.map(orderToRow));
-    if (error) logErr('failed to seed orders', error);
-  } catch (err) {
-    logErr('failed to seed orders', err);
-  }
+export async function seedOrdersRemote(_orders: Order[]) {
+  // bolt-website-ই এখন orders-এর source of truth, তাই এখানে seed করার দরকার নেই
 }
 
 export async function updateOrderRemote(id: number, patch: Partial<Order>) {
-  const row: Record<string, unknown> = {};
-  if (patch.status) row.status = patch.status;
-  if (patch.escrowLocked !== undefined) row.escrow_locked = patch.escrowLocked;
-  if (patch.escrowDeadline) row.escrow_deadline = patch.escrowDeadline;
-  if (Object.keys(row).length === 0) return;
   try {
-    const { error } = await supabase.from('orders').update(row).eq('id', id);
-    if (error) logErr('failed to update order', error);
+    const res = await fetch('/api/orders', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, patch }),
+    });
+    if (!res.ok) logErr('failed to update order', await res.text());
   } catch (err) {
     logErr('failed to update order', err);
   }
