@@ -20,7 +20,10 @@ export const mainSiteSupabase = createClient(mainSiteUrl, mainSiteAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    // Needed so a Google OAuth redirect landing back on this app gets
+    // its session parsed and stored automatically.
+    detectSessionInUrl: true,
+    flowType: 'pkce',
     // A distinct storage key so this session never collides with
     // anything else Control Room stores in localStorage.
     storageKey: 'gamehaatbd_main_site_auth',
