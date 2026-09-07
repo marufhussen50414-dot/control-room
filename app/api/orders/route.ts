@@ -11,10 +11,10 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  const listingIds = [...new Set(orders.map((o) => o.listing_id).filter(Boolean))]
-  const userIds = [
-    ...new Set(orders.flatMap((o) => [o.buyer_id, o.seller_id]).filter(Boolean)),
-  ]
+  const listingIds = Array.from(new Set(orders.map((o) => o.listing_id).filter(Boolean)))
+  const userIds = Array.from(
+    new Set(orders.flatMap((o) => [o.buyer_id, o.seller_id]).filter(Boolean))
+  )
 
   const [{ data: listings }, { data: profiles }] = await Promise.all([
     listingIds.length
