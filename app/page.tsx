@@ -7,7 +7,6 @@ import { ActiveEscrows } from '@/components/sections/active-escrows';
 import { DisputesReportsView } from '@/components/sections/disputes-reports';
 import { PayoutFinance } from '@/components/sections/payouts';
 import { Members } from '@/components/sections/members';
-import { LiveMarketplace } from '@/components/sections/live-marketplace';
 import { AccountSettings } from '@/components/sections/account';
 import { AuditLog } from '@/components/sections/audit';
 
@@ -29,8 +28,6 @@ export default function Home() {
       return <PayoutFinance mode="finance" />;
     case 'members':
       return <Members />;
-    case 'liveMarketplace':
-      return <LiveMarketplace />;
     case 'account':
       return <AccountSettings />;
     case 'audit':
