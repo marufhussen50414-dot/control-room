@@ -79,9 +79,7 @@ function userToRow(u: User) {
 }
 
 /** Fetch every synced member. Returns null on failure (keep local data). */
-export async function fetchMembersRemote(): Promise
-  { email: string; user: Omit<User, 'id'> }[] | null
-> {
+export async function fetchMembersRemote(): Promise<{ email: string; user: Omit<User, 'id'> }[] | null> {
   try {
     const { data, error } = await supabase.from('profiles').select('*');
     if (error || !data) {
