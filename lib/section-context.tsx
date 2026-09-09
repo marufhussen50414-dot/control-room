@@ -15,6 +15,9 @@ function initialSectionForPath(pathname: string | null): SectionKey {
   if (pathname && (pathname.startsWith('/disputes') || pathname.startsWith('/reports'))) {
     return 'disputes';
   }
+  if (pathname && pathname.startsWith('/orders')) {
+    return 'orders';
+  }
   return 'dashboard';
 }
 
