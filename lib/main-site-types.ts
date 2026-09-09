@@ -68,7 +68,7 @@ export type MainSiteOrder = {
   resolved_at: string | null;
   resolved_by: string | null;
   // Joined in via foreign-table select, not a real column.
-  buyer?: { username: string | null; full_name: string } | null;
-  seller?: { username: string | null; full_name: string } | null;
+  buyer?: { username: string | null; full_name: string; phone: string | null; whatsapp: string | null; email?: string } | null;
+  seller?: { username: string | null; full_name: string; phone: string | null; whatsapp: string | null; email?: string } | null;
   game_listings?: { title: string; game_name: string } | null;
 };
