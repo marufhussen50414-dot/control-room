@@ -38,8 +38,15 @@ const MAP: Record<MainSiteOrderStatus, { label: string; className: string }> = {
   },
 };
 
-export function RealOrderStatusBadge({ status }: { status: MainSiteOrderStatus }) {
-  const cfg = MAP[status];
+const FALLBACK = { label: 'Unknown', className: 'bg-muted text-muted-foreground' };
+
+export function RealOrderStatusBadge({
+  status,
+}: {
+  status: MainSiteOrderStatus | string | null | undefined;
+}) {
+  const normalized = String(status ?? '').toLowerCase() as MainSiteOrderStatus;
+  const cfg = MAP[normalized] ?? FALLBACK;
   return (
     <Badge variant="outline" className={cn('font-medium', cfg.className)}>
       {cfg.label}
