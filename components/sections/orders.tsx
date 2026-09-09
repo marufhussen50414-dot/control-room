@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { Search, Download, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -44,6 +45,7 @@ function exportCSV(rows: Record<string, unknown>[], filename: string) {
 }
 
 export function OrderManagement() {
+  const router = useRouter();
   const { orders, loading, loadError, refresh, updateStatus } = useRealOrders();
   const [query, setQuery] = React.useState('');
 
@@ -124,7 +126,11 @@ export function OrderManagement() {
               </TableHeader>
               <TableBody>
                 {filtered.map((o) => (
-                  <TableRow key={o.id}>
+                  <TableRow
+                    key={o.id}
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/orders/${o.id}`)}
+                  >
                     <TableCell className="pl-6 font-medium">#{o.shortId}</TableCell>
                     <TableCell className="text-muted-foreground">{o.buyerLabel}</TableCell>
                     <TableCell className="text-muted-foreground">{o.sellerLabel}</TableCell>
@@ -133,7 +139,7 @@ export function OrderManagement() {
                     <TableCell className="text-muted-foreground">{formatBDT(o.platformFee)}</TableCell>
                     <TableCell><RealOrderStatusBadge status={o.status} /></TableCell>
                     <TableCell className="text-xs text-muted-foreground">{formatDateTime(o.createdAt)}</TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <Select value={o.status} onValueChange={(v) => handleStatusChange(o.id, v as MainSiteOrderStatus)}>
                         <SelectTrigger className="h-8 w-[130px]"><SelectValue /></SelectTrigger>
                         <SelectContent>
