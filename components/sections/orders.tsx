@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Search, Download, RefreshCw, LogOut } from 'lucide-react';
+import { Search, Download, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { RealOrderStatusBadge } from '@/components/real-order-status-badge';
-import { ConnectLiveSitePrompt } from '@/components/connect-live-site-prompt';
 import { useRealOrders } from '@/lib/use-real-orders';
 import { formatBDT, formatDateTime } from '@/lib/format';
 import type { MainSiteOrderStatus } from '@/lib/main-site-types';
@@ -45,27 +44,8 @@ function exportCSV(rows: Record<string, unknown>[], filename: string) {
 }
 
 export function OrderManagement() {
-  const {
-    connected, checking, adminEmail, orders, loading, loadError,
-    refresh, updateStatus, disconnect,
-  } = useRealOrders();
+  const { orders, loading, loadError, refresh, updateStatus } = useRealOrders();
   const [query, setQuery] = React.useState('');
-
-  if (checking) {
-    return <div className="py-10 text-center text-muted-foreground">Checking connection…</div>;
-  }
-
-  if (!connected) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Order Management Center</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Manage all marketplace orders.</p>
-        </div>
-        <ConnectLiveSitePrompt />
-      </div>
-    );
-  }
 
   const q = query.toLowerCase().trim();
   const filtered = orders.filter(
@@ -79,14 +59,9 @@ export function OrderManagement() {
   const handleExport = () => {
     exportCSV(
       filtered.map((o) => ({
-        OrderID: o.shortId,
-        Buyer: o.buyerLabel,
-        Seller: o.sellerLabel,
-        Account: o.accountTitle,
-        Amount: o.amount,
-        Fee: o.platformFee,
-        Status: o.status,
-        Created: o.createdAt,
+        OrderID: o.shortId, Buyer: o.buyerLabel, Seller: o.sellerLabel,
+        Account: o.accountTitle, Amount: o.amount, Fee: o.platformFee,
+        Status: o.status, Created: o.createdAt,
       })),
       'orders.csv'
     );
@@ -104,9 +79,7 @@ export function OrderManagement() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Order Management Center</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage all marketplace orders. Connected as {adminEmail}.
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Manage all marketplace orders.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={refresh} disabled={loading}>
@@ -116,10 +89,6 @@ export function OrderManagement() {
           <Button variant="outline" onClick={handleExport}>
             <Download className="mr-2 h-4 w-4" />
             Export CSV
-          </Button>
-          <Button variant="ghost" onClick={disconnect}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Disconnect
           </Button>
         </div>
       </div>
@@ -134,9 +103,7 @@ export function OrderManagement() {
         />
       </div>
 
-      {loadError && (
-        <p className="text-sm text-destructive">Failed to load orders: {loadError}</p>
-      )}
+      {loadError && <p className="text-sm text-destructive">Failed to load orders: {loadError}</p>}
 
       <Card>
         <CardContent className="px-0">
@@ -161,25 +128,17 @@ export function OrderManagement() {
                     <TableCell className="pl-6 font-medium">#{o.shortId}</TableCell>
                     <TableCell className="text-muted-foreground">{o.buyerLabel}</TableCell>
                     <TableCell className="text-muted-foreground">{o.sellerLabel}</TableCell>
-                    <TableCell className="max-w-[180px] truncate text-muted-foreground">
-                      {o.accountTitle}
-                    </TableCell>
+                    <TableCell className="max-w-[180px] truncate text-muted-foreground">{o.accountTitle}</TableCell>
                     <TableCell>{formatBDT(o.amount)}</TableCell>
                     <TableCell className="text-muted-foreground">{formatBDT(o.platformFee)}</TableCell>
                     <TableCell><RealOrderStatusBadge status={o.status} /></TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {formatDateTime(o.createdAt)}
-                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{formatDateTime(o.createdAt)}</TableCell>
                     <TableCell>
                       <Select value={o.status} onValueChange={(v) => handleStatusChange(o.id, v as MainSiteOrderStatus)}>
-                        <SelectTrigger className="h-8 w-[130px]">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-8 w-[130px]"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {STATUSES.map((s) => (
-                            <SelectItem key={s} value={s}>
-                              {s.charAt(0).toUpperCase() + s.slice(1)}
-                            </SelectItem>
+                            <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -189,7 +148,7 @@ export function OrderManagement() {
                 {filtered.length === 0 && !loading && (
                   <TableRow>
                     <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
-                      No orders match your search.
+                      {loading ? 'Loading…' : 'No orders found.'}
                     </TableCell>
                   </TableRow>
                 )}
