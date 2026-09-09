@@ -15,6 +15,29 @@ export type RealOrder = {
   escrowLocked: boolean;
   escrowDeadline: string | null;
   createdAt: string;
+  // নিচের ফিল্ডগুলো শুধু detail পেজে ব্যবহার হয়, টেবিলে না
+  buyerId: string;
+  sellerId: string;
+  buyerEmail: string;
+  sellerEmail: string;
+  buyerPhone: string | null;
+  sellerPhone: string | null;
+  buyerWhatsapp: string | null;
+  sellerWhatsapp: string | null;
+  gameName: string | null;
+  sellerAmount: number;
+  commissionRate: number;
+  paymentMethod: string;
+  paymentNumber: string | null;
+  deliveryPassword: string | null;
+  deliveryVideoUrl: string | null;
+  deliveredAt: string | null;
+  buyerVideoUrl: string | null;
+  disputeReason: string | null;
+  disputeOpenedAt: string | null;
+  adminNotes: string | null;
+  resolvedAt: string | null;
+  updatedAt: string;
 };
 
 function toShortId(id: string) {
@@ -34,6 +57,28 @@ function mapOrder(o: MainSiteOrder): RealOrder {
     escrowLocked: !o.escrow_released && ['paid', 'delivering', 'disputed'].includes(o.status),
     escrowDeadline: o.buyer_confirm_deadline,
     createdAt: o.created_at,
+    buyerId: o.buyer_id,
+    sellerId: o.seller_id,
+    buyerEmail: o.buyer?.email ?? '',
+    sellerEmail: o.seller?.email ?? '',
+    buyerPhone: o.buyer?.phone ?? null,
+    sellerPhone: o.seller?.phone ?? null,
+    buyerWhatsapp: o.buyer?.whatsapp ?? null,
+    sellerWhatsapp: o.seller?.whatsapp ?? null,
+    gameName: o.game_listings?.game_name ?? null,
+    sellerAmount: o.seller_amount,
+    commissionRate: o.commission_rate,
+    paymentMethod: o.payment_method,
+    paymentNumber: o.payment_number,
+    deliveryPassword: o.delivery_password,
+    deliveryVideoUrl: o.delivery_video_url,
+    deliveredAt: o.delivered_at,
+    buyerVideoUrl: o.buyer_video_url,
+    disputeReason: o.dispute_reason,
+    disputeOpenedAt: o.dispute_opened_at,
+    adminNotes: o.admin_notes,
+    resolvedAt: o.resolved_at,
+    updatedAt: o.updated_at,
   };
 }
 
