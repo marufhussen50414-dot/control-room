@@ -1,131 +1,55 @@
 'use client';
 
-import * as React from 'react';
-import type { MainSiteOrder, MainSiteOrderStatus } from '@/lib/main-site-types';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import type { MainSiteOrderStatus } from '@/lib/main-site-types';
 
-export type RealOrder = {
-  id: string;
-  shortId: string;
-  buyerLabel: string;
-  sellerLabel: string;
-  accountTitle: string;
-  amount: number;
-  platformFee: number;
-  status: MainSiteOrderStatus;
-  escrowLocked: boolean;
-  escrowDeadline: string | null;
-  createdAt: string;
+const MAP: Record<MainSiteOrderStatus, { label: string; className: string }> = {
+  pending: {
+    label: 'Pending',
+    className: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
+  },
+  paid: {
+    label: 'Paid',
+    className: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400',
+  },
+  delivering: {
+    label: 'Delivering',
+    className:
+      'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400',
+  },
+  completed: {
+    label: 'Completed',
+    className:
+      'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
+  },
+  cancelled: {
+    label: 'Cancelled',
+    className: 'bg-muted text-muted-foreground',
+  },
+  disputed: {
+    label: 'Disputed',
+    className: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
+  },
+  refunded: {
+    label: 'Refunded',
+    className:
+      'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400',
+  },
 };
 
-function toShortId(id: string) {
-  return id.slice(0, 8).toUpperCase();
-}
+const FALLBACK = { label: 'Unknown', className: 'bg-muted text-muted-foreground' };
 
-function mapOrder(o: MainSiteOrder): RealOrder {
-  return {
-    id: o.id,
-    shortId: toShortId(o.id),
-    buyerLabel: o.buyer?.full_name || o.buyer?.username || o.buyer_id.slice(0, 8),
-    sellerLabel: o.seller?.full_name || o.seller?.username || o.seller_id.slice(0, 8),
-    accountTitle: o.game_listings?.title ?? 'Listing',
-    amount: o.price,
-    platformFee: o.commission_amount,
-    status: o.status,
-    escrowLocked: !o.escrow_released && ['paid', 'delivering', 'disputed'].includes(o.status),
-    escrowDeadline: o.buyer_confirm_deadline,
-    createdAt: o.created_at,
-  };
-}
-
-export function useRealOrders() {
-  const [orders, setOrders] = React.useState<RealOrder[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [loadError, setLoadError] = React.useState('');
-
-  const load = React.useCallback(async () => {
-    setLoading(true);
-    setLoadError('');
-    try {
-      const res = await fetch('/api/orders', { cache: 'no-store' });
-      const json = await res.json();
-      if (!res.ok) {
-        setLoadError(json.error ?? 'Failed to load orders');
-      } else {
-        setOrders(((json as MainSiteOrder[]) ?? []).map(mapOrder));
-      }
-    } catch (err: any) {
-      setLoadError(err.message ?? 'Failed to load orders');
-    }
-    setLoading(false);
-  }, []);
-
-  React.useEffect(() => {
-    load();
-  }, [load]);
-
-  const patchOrder = React.useCallback(async (id: string, patch: Record<string, unknown>) => {
-    const res = await fetch('/api/orders', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, patch }),
-    });
-    const json = await res.json();
-    if (!res.ok) return { ok: false as const, message: json.error ?? 'Update failed' };
-    return { ok: true as const };
-  }, []);
-
-  const updateStatus = React.useCallback(
-    async (id: string, status: MainSiteOrderStatus) => {
-      const patch: Record<string, unknown> = { status };
-      if (status === 'completed') patch.escrow_released = true;
-      const res = await patchOrder(id, patch);
-      if (res.ok) {
-        setOrders((prev) =>
-          prev.map((o) =>
-            o.id === id
-              ? {
-                  ...o,
-                  status,
-                  escrowLocked: status === 'completed' ? false : ['paid', 'delivering', 'disputed'].includes(status),
-                }
-              : o
-          )
-        );
-      }
-      return res;
-    },
-    [patchOrder]
+export function RealOrderStatusBadge({
+  status,
+}: {
+  status: MainSiteOrderStatus | string | null | undefined;
+}) {
+  const normalized = String(status ?? '').toLowerCase() as MainSiteOrderStatus;
+  const cfg = MAP[normalized] ?? FALLBACK;
+  return (
+    <Badge variant="outline" className={cn('font-medium', cfg.className)}>
+      {cfg.label}
+    </Badge>
   );
-
-  const releaseEscrow = React.useCallback(
-    async (id: string) => {
-      const res = await patchOrder(id, {
-        status: 'completed',
-        escrow_released: true,
-        completed_at: new Date().toISOString(),
-      });
-      if (res.ok) {
-        setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: 'completed', escrowLocked: false } : o)));
-      }
-      return res;
-    },
-    [patchOrder]
-  );
-
-  const extendEscrow = React.useCallback(
-    async (id: string, hours: number) => {
-      const order = orders.find((o) => o.id === id);
-      const base = order?.escrowDeadline ? new Date(order.escrowDeadline).getTime() : Date.now();
-      const newDeadline = new Date(base + hours * 3600000).toISOString();
-      const res = await patchOrder(id, { buyer_confirm_deadline: newDeadline });
-      if (res.ok) {
-        setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, escrowDeadline: newDeadline } : o)));
-      }
-      return res;
-    },
-    [orders, patchOrder]
-  );
-
-  return { orders, loading, loadError, refresh: load, updateStatus, releaseEscrow, extendEscrow };
 }
- 
