@@ -8,9 +8,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RealOrderStatusBadge } from '@/components/real-order-status-badge';
 import { WorkflowPanel } from '@/components/workflow-panel';
+import { ForwardConfirmDialog, BackwardWarningDialog } from '@/components/workflow-transition-dialogs';
 import { useRealOrders } from '@/lib/use-real-orders';
 import { formatBDT, formatDateTime } from '@/lib/format';
-import type { WorkflowStatus } from '@/lib/workflow';
+import { getStepDef, canAdvanceFromStatus, firstStatusOfStep, getStatusOption, type WorkflowStatus } from '@/lib/workflow';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -82,10 +83,58 @@ function OrderDetailContent() {
   const id = params?.id as string;
   const order = orders.find((o) => o.id === id);
 
-  const handleWorkflowChange = async (next: WorkflowStatus) => {
-    const res = await updateWorkflowStatus(id, next);
+  const [forwardTarget, setForwardTarget] = React.useState<{ step: number; onCancelApply?: WorkflowStatus } | null>(null);
+  const [backwardTarget, setBackwardTarget] = React.useState<number | null>(null);
+
+  const applyStatus = async (status: WorkflowStatus, note?: string) => {
+    const res = await updateWorkflowStatus(id, status, note);
     if (!res.ok) toast.error(res.message);
     else toast.success('Status updated');
+  };
+
+  const handleRequestStatusChange = (newStatus: WorkflowStatus) => {
+    if (!order || newStatus === order.workflowStatus) return;
+    const curStep = getStepDef(order.workflowStatus).step;
+    const opt = getStatusOption(newStatus);
+    if (opt.advances && curStep < 5) {
+      setForwardTarget({ step: curStep + 1, onCancelApply: newStatus });
+    } else {
+      applyStatus(newStatus);
+    }
+  };
+
+  const handleRequestStepClick = (targetStep: number) => {
+    if (!order) return;
+    const curStep = getStepDef(order.workflowStatus).step;
+    if (targetStep === curStep) return;
+    if (targetStep === curStep + 1) {
+      if (!canAdvanceFromStatus(order.workflowStatus)) {
+        toast.error('আগে এই স্টেপের কাজ শেষ করুন (Status থেকে সঠিক অপশন বেছে নিন)।');
+        return;
+      }
+      setForwardTarget({ step: targetStep });
+    } else if (targetStep > curStep + 1) {
+      toast.error('একটার পর একটা স্টেপ শেষ করতে হবে — স্কিপ করা যাবে না।');
+    } else {
+      setBackwardTarget(targetStep);
+    }
+  };
+
+  const confirmForward = () => {
+    if (forwardTarget) applyStatus(firstStatusOfStep(forwardTarget.step));
+    setForwardTarget(null);
+  };
+
+  const cancelForward = () => {
+    if (forwardTarget?.onCancelApply) applyStatus(forwardTarget.onCancelApply);
+    setForwardTarget(null);
+  };
+
+  const confirmBackward = (reason: string) => {
+    if (backwardTarget) {
+      applyStatus(firstStatusOfStep(backwardTarget), `পিছনে নেওয়া হয়েছে Step ${backwardTarget} এ। কারণ: ${reason}`);
+    }
+    setBackwardTarget(null);
   };
 
   if (loading) {
@@ -108,6 +157,19 @@ function OrderDetailContent() {
 
   return (
     <div className="space-y-6">
+      <ForwardConfirmDialog
+        open={!!forwardTarget}
+        targetStep={forwardTarget?.step ?? null}
+        onConfirm={confirmForward}
+        onCancel={cancelForward}
+      />
+      <BackwardWarningDialog
+        open={backwardTarget !== null}
+        targetStep={backwardTarget}
+        onConfirm={confirmBackward}
+        onCancel={() => setBackwardTarget(null)}
+      />
+
       <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Orders
@@ -124,8 +186,18 @@ function OrderDetailContent() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <WorkflowPanel role="buyer" status={order.workflowStatus} onChange={handleWorkflowChange} />
-        <WorkflowPanel role="seller" status={order.workflowStatus} onChange={handleWorkflowChange} />
+        <WorkflowPanel
+          role="buyer"
+          status={order.workflowStatus}
+          onRequestStatusChange={handleRequestStatusChange}
+          onRequestStepClick={handleRequestStepClick}
+        />
+        <WorkflowPanel
+          role="seller"
+          status={order.workflowStatus}
+          onRequestStatusChange={handleRequestStatusChange}
+          onRequestStepClick={handleRequestStepClick}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
