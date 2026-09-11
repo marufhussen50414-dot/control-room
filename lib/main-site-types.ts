@@ -67,6 +67,9 @@ export type MainSiteOrder = {
   admin_notes: string | null;
   resolved_at: string | null;
   resolved_by: string | null;
+  // Buyer/Seller roadmap progress. One shared value — see lib/workflow.ts.
+  // Nullable so existing rows created before this column existed still load.
+  workflow_status: string | null;
   // Joined in via foreign-table select, not a real column.
   buyer?: { username: string | null; full_name: string; phone: string | null; whatsapp: string | null; email?: string } | null;
   seller?: { username: string | null; full_name: string; phone: string | null; whatsapp: string | null; email?: string } | null;

@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import type { MainSiteOrder, MainSiteOrderStatus } from '@/lib/main-site-types';
+import { normalizeWorkflowStatus, type WorkflowStatus } from '@/lib/workflow';
 
 export type RealOrder = {
   id: string;
@@ -12,6 +13,7 @@ export type RealOrder = {
   amount: number;
   platformFee: number;
   status: MainSiteOrderStatus;
+  workflowStatus: WorkflowStatus;
   escrowLocked: boolean;
   escrowDeadline: string | null;
   createdAt: string;
@@ -54,6 +56,7 @@ function mapOrder(o: MainSiteOrder): RealOrder {
     amount: o.price,
     platformFee: o.commission_amount,
     status: o.status,
+    workflowStatus: normalizeWorkflowStatus(o.workflow_status),
     escrowLocked: !o.escrow_released && ['paid', 'delivering', 'disputed'].includes(o.status),
     escrowDeadline: o.buyer_confirm_deadline,
     createdAt: o.created_at,
@@ -142,6 +145,17 @@ export function useRealOrders() {
     [patchOrder]
   );
 
+  const updateWorkflowStatus = React.useCallback(
+    async (id: string, workflowStatus: WorkflowStatus) => {
+      const res = await patchOrder(id, { workflow_status: workflowStatus });
+      if (res.ok) {
+        setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, workflowStatus } : o)));
+      }
+      return res;
+    },
+    [patchOrder]
+  );
+
   const releaseEscrow = React.useCallback(
     async (id: string) => {
       const res = await patchOrder(id, {
@@ -171,5 +185,5 @@ export function useRealOrders() {
     [orders, patchOrder]
   );
 
-  return { orders, loading, loadError, refresh: load, updateStatus, releaseEscrow, extendEscrow };
+  return { orders, loading, loadError, refresh: load, updateStatus, updateWorkflowStatus, releaseEscrow, extendEscrow };
 }
