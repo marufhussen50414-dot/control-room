@@ -6,19 +6,13 @@ import { useSection } from '@/lib/section-context';
 import { ArrowLeft, User as UserIcon, Store, Phone, Mail, MessageCircle, Play } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import { RealOrderStatusBadge } from '@/components/real-order-status-badge';
+import { WorkflowPanel } from '@/components/workflow-panel';
 import { useRealOrders } from '@/lib/use-real-orders';
 import { formatBDT, formatDateTime } from '@/lib/format';
-import type { MainSiteOrderStatus } from '@/lib/main-site-types';
+import type { WorkflowStatus } from '@/lib/workflow';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-
-const STATUSES: MainSiteOrderStatus[] = [
-  'pending', 'paid', 'delivering', 'completed', 'cancelled', 'disputed', 'refunded',
-];
 
 function initials(name: string) {
   return name.split(' ').map((p) => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
@@ -84,12 +78,12 @@ function PartyCard({
 function OrderDetailContent() {
   const params = useParams();
   const router = useRouter();
-  const { orders, loading, updateStatus } = useRealOrders();
+  const { orders, loading, updateWorkflowStatus } = useRealOrders();
   const id = params?.id as string;
   const order = orders.find((o) => o.id === id);
 
-  const handleStatusChange = async (status: MainSiteOrderStatus) => {
-    const res = await updateStatus(id, status);
+  const handleWorkflowChange = async (next: WorkflowStatus) => {
+    const res = await updateWorkflowStatus(id, next);
     if (!res.ok) toast.error(res.message);
     else toast.success('Status updated');
   };
@@ -126,15 +120,12 @@ function OrderDetailContent() {
         </div>
         <div className="flex items-center gap-3">
           <RealOrderStatusBadge status={order.status} />
-          <Select value={order.status} onValueChange={(v) => handleStatusChange(v as MainSiteOrderStatus)}>
-            <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {STATUSES.map((s) => (
-                <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <WorkflowPanel role="buyer" status={order.workflowStatus} onChange={handleWorkflowChange} />
+        <WorkflowPanel role="seller" status={order.workflowStatus} onChange={handleWorkflowChange} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
