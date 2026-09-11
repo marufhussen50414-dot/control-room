@@ -11,7 +11,7 @@ import { WorkflowPanel } from '@/components/workflow-panel';
 import { ForwardConfirmDialog, BackwardWarningDialog } from '@/components/workflow-transition-dialogs';
 import { useRealOrders } from '@/lib/use-real-orders';
 import { formatBDT, formatDateTime } from '@/lib/format';
-import { getStepDef, canAdvanceFromStatus, firstStatusOfStep, getStatusOption, type WorkflowStatus } from '@/lib/workflow';
+import { getStepDef, canAdvanceFromStatus, firstStatusOfStep, type WorkflowStatus } from '@/lib/workflow';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -83,7 +83,7 @@ function OrderDetailContent() {
   const id = params?.id as string;
   const order = orders.find((o) => o.id === id);
 
-  const [forwardTarget, setForwardTarget] = React.useState<{ step: number; onCancelApply?: WorkflowStatus } | null>(null);
+  const [forwardTarget, setForwardTarget] = React.useState<number | null>(null);
   const [backwardTarget, setBackwardTarget] = React.useState<number | null>(null);
 
   const applyStatus = async (status: WorkflowStatus, note?: string) => {
@@ -94,13 +94,7 @@ function OrderDetailContent() {
 
   const handleRequestStatusChange = (newStatus: WorkflowStatus) => {
     if (!order || newStatus === order.workflowStatus) return;
-    const curStep = getStepDef(order.workflowStatus).step;
-    const opt = getStatusOption(newStatus);
-    if (opt.advances && curStep < 5) {
-      setForwardTarget({ step: curStep + 1, onCancelApply: newStatus });
-    } else {
-      applyStatus(newStatus);
-    }
+    applyStatus(newStatus);
   };
 
   const handleRequestStepClick = (targetStep: number) => {
@@ -109,30 +103,29 @@ function OrderDetailContent() {
     if (targetStep === curStep) return;
     if (targetStep === curStep + 1) {
       if (!canAdvanceFromStatus(order.workflowStatus)) {
-        toast.error('আগে এই স্টেপের কাজ শেষ করুন (Status থেকে সঠিক অপশন বেছে নিন)।');
+        toast.error('Finish this step first — pick the right option from Status.');
         return;
       }
-      setForwardTarget({ step: targetStep });
+      setForwardTarget(targetStep);
     } else if (targetStep > curStep + 1) {
-      toast.error('একটার পর একটা স্টেপ শেষ করতে হবে — স্কিপ করা যাবে না।');
+      toast.error('Steps must be completed one at a time — skipping is not allowed.');
     } else {
       setBackwardTarget(targetStep);
     }
   };
 
   const confirmForward = () => {
-    if (forwardTarget) applyStatus(firstStatusOfStep(forwardTarget.step));
+    if (forwardTarget) applyStatus(firstStatusOfStep(forwardTarget));
     setForwardTarget(null);
   };
 
   const cancelForward = () => {
-    if (forwardTarget?.onCancelApply) applyStatus(forwardTarget.onCancelApply);
     setForwardTarget(null);
   };
 
   const confirmBackward = (reason: string) => {
     if (backwardTarget) {
-      applyStatus(firstStatusOfStep(backwardTarget), `পিছনে নেওয়া হয়েছে Step ${backwardTarget} এ। কারণ: ${reason}`);
+      applyStatus(firstStatusOfStep(backwardTarget), `Moved back to Step ${backwardTarget}. Reason: ${reason}`);
     }
     setBackwardTarget(null);
   };
@@ -159,7 +152,7 @@ function OrderDetailContent() {
     <div className="space-y-6">
       <ForwardConfirmDialog
         open={!!forwardTarget}
-        targetStep={forwardTarget?.step ?? null}
+        targetStep={forwardTarget}
         onConfirm={confirmForward}
         onCancel={cancelForward}
       />
@@ -286,5 +279,4 @@ export default function OrderDetailPage() {
 
   return <OrderDetailContent />;
 }
- 
  
