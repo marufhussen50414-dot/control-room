@@ -34,17 +34,17 @@ export function ForwardConfirmDialog({
     <Dialog open={open} onOpenChange={(v) => !v && onCancel()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>এই স্টেপের কাজ শেষ?</DialogTitle>
+          <DialogTitle>Is this step done?</DialogTitle>
           <DialogDescription>
             {targetStep
-              ? `কনফার্ম করলে অর্ডারটি Step ${targetStep}: ${stepLabel(targetStep, 'seller')} সেকশনে চলে যাবে।`
+              ? `Confirming will move this order to Step ${targetStep}: ${stepLabel(targetStep, 'seller')}.`
               : ''}
           </DialogDescription>
         </DialogHeader>
         {targetStep && <RoadmapPreview targetStep={targetStep} />}
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>এখনই না</Button>
-          <Button onClick={onConfirm}>কনফার্ম করুন</Button>
+          <Button variant="outline" onClick={onCancel}>Not now</Button>
+          <Button onClick={onConfirm}>Confirm</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -76,10 +76,10 @@ export function BackwardWarningDialog({
     <Dialog open={open} onOpenChange={(v) => !v && onCancel()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-amber-600 dark:text-amber-400">⚠️ আপনি পিছনের স্টেপে যাচ্ছেন</DialogTitle>
+          <DialogTitle className="text-amber-600 dark:text-amber-400">⚠️ You're moving this order backward</DialogTitle>
           <DialogDescription>
             {targetStep
-              ? `এই অর্ডারটি Step ${targetStep}: ${stepLabel(targetStep, 'seller')} — আগের একটা স্টেপে ফিরিয়ে নেওয়া হবে। এটা ইচ্ছাকৃতভাবে নিশ্চিত করুন।`
+              ? `This order will be moved back to Step ${targetStep}: ${stepLabel(targetStep, 'seller')}. Please confirm this is intentional.`
               : ''}
           </DialogDescription>
         </DialogHeader>
@@ -90,30 +90,30 @@ export function BackwardWarningDialog({
           <RadioGroup value={ack ? 'yes' : ''} onValueChange={(v) => setAck(v === 'yes')}>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="yes" id="ack-back" />
-              <Label htmlFor="ack-back" className="font-normal">হ্যাঁ, আমি ইচ্ছাকৃতভাবে এই অর্ডারটি পিছনের স্টেপে নিতে চাই</Label>
+              <Label htmlFor="ack-back" className="font-normal">Yes, I intentionally want to move this order back a step</Label>
             </div>
           </RadioGroup>
 
           <div className="space-y-1.5">
-            <Label htmlFor="back-reason" className="text-sm">কেন পিছনে নিচ্ছেন? (কারণ লিখুন)</Label>
+            <Label htmlFor="back-reason" className="text-sm">Why are you moving it back? (required)</Label>
             <Textarea
               id="back-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="যেমন: সেলার ভুল তথ্য দিয়েছিল, তাই যাচাই স্টেপে ফিরিয়ে নেওয়া হচ্ছে…"
+              placeholder="e.g. Seller submitted wrong info, sending it back to the verification step…"
               className="min-h-[80px]"
             />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>বাতিল করুন</Button>
+          <Button variant="outline" onClick={onCancel}>Cancel</Button>
           <Button
             variant="destructive"
             disabled={!ack || reason.trim().length === 0}
             onClick={() => onConfirm(reason.trim())}
           >
-            পিছনে নিয়ে যান
+            Move it back
           </Button>
         </DialogFooter>
       </DialogContent>

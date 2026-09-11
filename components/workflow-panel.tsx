@@ -12,6 +12,7 @@ import {
   statusLabel,
   stepLabel,
   TONE_CLASSNAMES,
+  WORKFLOW_STEPS,
   type WorkflowRole,
   type WorkflowStatus,
 } from '@/lib/workflow';
@@ -49,9 +50,16 @@ export function WorkflowPanel({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Step</p>
-            <div className="flex h-9 items-center truncate rounded-md border border-input bg-muted/30 px-3 text-sm text-muted-foreground">
-              {`Step ${currentStep.step}: ${stepLabel(currentStep.step, role)}`}
-            </div>
+            <Select value={String(currentStep.step)} onValueChange={(v) => onRequestStepClick(Number(v))}>
+              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {WORKFLOW_STEPS.map((s) => (
+                  <SelectItem key={s.step} value={String(s.step)}>
+                    {`Step ${s.step}: ${stepLabel(s.step, role)}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Status</p>
