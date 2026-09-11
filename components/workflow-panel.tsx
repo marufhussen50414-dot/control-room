@@ -10,6 +10,7 @@ import {
   getStepDef,
   getStatusOption,
   statusLabel,
+  stepLabel,
   TONE_CLASSNAMES,
   type WorkflowRole,
   type WorkflowStatus,
@@ -45,18 +46,26 @@ export function WorkflowPanel({
 
         <WorkflowRoadmap role={role} currentStep={currentStep.step} onNodeClick={onRequestStepClick} />
 
-        <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">Status</p>
-          <Select value={status} onValueChange={(v) => onRequestStatusChange(v as WorkflowStatus)}>
-            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {currentStep.statuses.map((s) => (
-                <SelectItem key={s.code} value={s.code}>
-                  {role === 'buyer' ? s.buyerLabel : s.sellerLabel}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Step</p>
+            <div className="flex h-9 items-center truncate rounded-md border border-input bg-muted/30 px-3 text-sm text-muted-foreground">
+              {`Step ${currentStep.step}: ${stepLabel(currentStep.step, role)}`}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Status</p>
+            <Select value={status} onValueChange={(v) => onRequestStatusChange(v as WorkflowStatus)}>
+              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {currentStep.statuses.map((s) => (
+                  <SelectItem key={s.code} value={s.code}>
+                    {role === 'buyer' ? s.buyerLabel : s.sellerLabel}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </CardContent>
     </Card>

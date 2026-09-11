@@ -13,7 +13,7 @@ import { WorkflowRoadmap } from '@/components/workflow-roadmap';
 
 function RoadmapPreview({ targetStep }: { targetStep: number }) {
   return (
-    <div className="animate-in fade-in-0 slide-in-from-top-2 zoom-in-95 rounded-lg border bg-muted/20 p-4 duration-300">
+    <div className="animate-in fade-in-0 slide-in-from-top-3 zoom-in-95 ease-out rounded-lg border bg-muted/20 p-4 duration-500 delay-150 fill-mode-both">
       <WorkflowRoadmap role="seller" currentStep={targetStep} onNodeClick={() => {}} />
     </div>
   );
