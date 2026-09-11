@@ -9,9 +9,11 @@ import { Button } from '@/components/ui/button';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { RealOrderStatusBadge } from '@/components/real-order-status-badge';
+import { Badge } from '@/components/ui/badge';
 import { useRealOrders } from '@/lib/use-real-orders';
-import { formatBDT, formatDateTime } from '@/lib/format';
+import { formatBDT } from '@/lib/format';
+import { cn } from '@/lib/utils';
+import { getStepDef, getStatusOption, stepLabel, statusLabel, TONE_CLASSNAMES } from '@/lib/workflow';
 import { toast } from 'sonner';
 
 function exportCSV(rows: Record<string, unknown>[], filename: string) {
@@ -55,7 +57,9 @@ export function OrderManagement() {
       filtered.map((o) => ({
         OrderID: o.shortId, Buyer: o.buyerLabel, Seller: o.sellerLabel,
         Account: o.accountTitle, Amount: o.amount, Fee: o.platformFee,
-        Status: o.status, Created: o.createdAt,
+        Step: stepLabel(getStepDef(o.workflowStatus).step, 'buyer'),
+        Status: statusLabel(o.workflowStatus, 'buyer'),
+        Created: o.createdAt,
       })),
       'orders.csv'
     );
@@ -105,8 +109,8 @@ export function OrderManagement() {
                   <TableHead>Account</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Fee</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="pr-6">Created</TableHead>
+                  <TableHead>Step</TableHead>
+                  <TableHead className="pr-6">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -122,8 +126,14 @@ export function OrderManagement() {
                     <TableCell className="max-w-[180px] truncate text-muted-foreground">{o.accountTitle}</TableCell>
                     <TableCell>{formatBDT(o.amount)}</TableCell>
                     <TableCell className="text-muted-foreground">{formatBDT(o.platformFee)}</TableCell>
-                    <TableCell><RealOrderStatusBadge status={o.status} /></TableCell>
-                    <TableCell className="pr-6 text-xs text-muted-foreground">{formatDateTime(o.createdAt)}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {stepLabel(getStepDef(o.workflowStatus).step, 'buyer')}
+                    </TableCell>
+                    <TableCell className="pr-6">
+                      <Badge variant="outline" className={cn('font-medium', TONE_CLASSNAMES[getStatusOption(o.workflowStatus).tone])}>
+                        {statusLabel(o.workflowStatus, 'buyer')}
+                      </Badge>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {filtered.length === 0 && !loading && (
