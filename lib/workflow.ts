@@ -29,6 +29,9 @@ export type WorkflowStatusOption = {
   sellerLabel: string;
   buyerLabel: string;
   tone: WorkflowTone;
+  // true when picking this status means this step's work is done and the
+  // order is allowed to move on to the next step.
+  advances: boolean;
 };
 
 export type WorkflowStepDef = {
@@ -46,8 +49,8 @@ export const WORKFLOW_STEPS: WorkflowStepDef[] = [
     sellerLabel: 'Order Placed',
     buyerLabel: 'Order Placed',
     statuses: [
-      { code: 'step1_checking', sellerLabel: 'Under Checking', buyerLabel: 'Under Checking', tone: 'neutral' },
-      { code: 'step1_paid', sellerLabel: 'Paid', buyerLabel: 'Paid', tone: 'progress' },
+      { code: 'step1_checking', sellerLabel: 'Under Checking', buyerLabel: 'Under Checking', tone: 'neutral', advances: false },
+      { code: 'step1_paid', sellerLabel: 'Paid', buyerLabel: 'Paid', tone: 'progress', advances: true },
     ],
   },
   {
@@ -55,7 +58,7 @@ export const WORKFLOW_STEPS: WorkflowStepDef[] = [
     sellerLabel: 'Payment Received',
     buyerLabel: 'Payment Received',
     statuses: [
-      { code: 'step2_escrow', sellerLabel: 'In Escrow', buyerLabel: 'In Escrow', tone: 'progress' },
+      { code: 'step2_escrow', sellerLabel: 'In Escrow', buyerLabel: 'In Escrow', tone: 'progress', advances: true },
     ],
   },
   {
@@ -63,8 +66,8 @@ export const WORKFLOW_STEPS: WorkflowStepDef[] = [
     sellerLabel: 'Submit Account Info',
     buyerLabel: 'Waiting for Account Info',
     statuses: [
-      { code: 'step3_pending', sellerLabel: 'Pending', buyerLabel: 'Waiting', tone: 'neutral' },
-      { code: 'step3_submitted', sellerLabel: 'Submitted', buyerLabel: 'Received', tone: 'progress' },
+      { code: 'step3_pending', sellerLabel: 'Pending', buyerLabel: 'Waiting', tone: 'neutral', advances: false },
+      { code: 'step3_submitted', sellerLabel: 'Submitted', buyerLabel: 'Received', tone: 'progress', advances: true },
     ],
   },
   {
@@ -72,9 +75,9 @@ export const WORKFLOW_STEPS: WorkflowStepDef[] = [
     sellerLabel: 'Account Transfer & Verification',
     buyerLabel: 'Account Transfer & Verification',
     statuses: [
-      { code: 'step4_checking', sellerLabel: 'Checking (23:59)', buyerLabel: 'Checking (23:59)', tone: 'neutral' },
-      { code: 'step4_approved', sellerLabel: 'Approved', buyerLabel: 'Approved', tone: 'success' },
-      { code: 'step4_disputed', sellerLabel: 'Disputed', buyerLabel: 'Disputed', tone: 'danger' },
+      { code: 'step4_checking', sellerLabel: 'Checking (23:59)', buyerLabel: 'Checking (23:59)', tone: 'neutral', advances: false },
+      { code: 'step4_approved', sellerLabel: 'Approved', buyerLabel: 'Approved', tone: 'success', advances: true },
+      { code: 'step4_disputed', sellerLabel: 'Disputed', buyerLabel: 'Disputed', tone: 'danger', advances: false },
     ],
   },
   {
@@ -82,8 +85,8 @@ export const WORKFLOW_STEPS: WorkflowStepDef[] = [
     sellerLabel: 'Payout Status',
     buyerLabel: 'Payment Processing',
     statuses: [
-      { code: 'step5_processing', sellerLabel: 'Processing', buyerLabel: 'Processing', tone: 'neutral' },
-      { code: 'step5_released', sellerLabel: 'Released to Wallet', buyerLabel: 'Released to Seller', tone: 'success' },
+      { code: 'step5_processing', sellerLabel: 'Processing', buyerLabel: 'Processing', tone: 'neutral', advances: false },
+      { code: 'step5_released', sellerLabel: 'Released to Wallet', buyerLabel: 'Released to Seller', tone: 'success', advances: true },
     ],
   },
 ];
@@ -113,6 +116,12 @@ export function getStatusOption(status: WorkflowStatus): WorkflowStatusOption {
 
 export function firstStatusOfStep(step: number): WorkflowStatus {
   return getStepDefByNumber(step).statuses[0].code;
+}
+
+// Whether the current status already satisfies this step's requirement,
+// i.e. whether the order is allowed to move on to the next step.
+export function canAdvanceFromStatus(status: WorkflowStatus): boolean {
+  return getStatusOption(status).advances;
 }
 
 export function stepLabel(step: number, role: WorkflowRole): string {

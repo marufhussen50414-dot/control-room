@@ -146,14 +146,27 @@ export function useRealOrders() {
   );
 
   const updateWorkflowStatus = React.useCallback(
-    async (id: string, workflowStatus: WorkflowStatus) => {
-      const res = await patchOrder(id, { workflow_status: workflowStatus });
+    async (id: string, workflowStatus: WorkflowStatus, note?: string) => {
+      const patch: Record<string, unknown> = { workflow_status: workflowStatus };
+      if (note) {
+        const order = orders.find((o) => o.id === id);
+        const stamp = new Date().toLocaleString();
+        const line = `[${stamp}] ${note}`;
+        patch.admin_notes = order?.adminNotes ? `${order.adminNotes}\n${line}` : line;
+      }
+      const res = await patchOrder(id, patch);
       if (res.ok) {
-        setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, workflowStatus } : o)));
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === id
+              ? { ...o, workflowStatus, adminNotes: (patch.admin_notes as string) ?? o.adminNotes }
+              : o
+          )
+        );
       }
       return res;
     },
-    [patchOrder]
+    [patchOrder, orders]
   );
 
   const releaseEscrow = React.useCallback(
