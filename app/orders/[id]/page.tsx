@@ -214,4 +214,3 @@ export default function OrderDetailPage() {
 
   return <OrderDetailContent />;
 }
- 
