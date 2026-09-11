@@ -9,18 +9,10 @@ import { Button } from '@/components/ui/button';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import { RealOrderStatusBadge } from '@/components/real-order-status-badge';
 import { useRealOrders } from '@/lib/use-real-orders';
 import { formatBDT, formatDateTime } from '@/lib/format';
-import type { MainSiteOrderStatus } from '@/lib/main-site-types';
 import { toast } from 'sonner';
-
-const STATUSES: MainSiteOrderStatus[] = [
-  'pending', 'paid', 'delivering', 'completed', 'cancelled', 'disputed', 'refunded',
-];
 
 function exportCSV(rows: Record<string, unknown>[], filename: string) {
   if (rows.length === 0) return;
@@ -46,7 +38,7 @@ function exportCSV(rows: Record<string, unknown>[], filename: string) {
 
 export function OrderManagement() {
   const router = useRouter();
-  const { orders, loading, loadError, refresh, updateStatus } = useRealOrders();
+  const { orders, loading, loadError, refresh } = useRealOrders();
   const [query, setQuery] = React.useState('');
 
   const q = query.toLowerCase().trim();
@@ -68,12 +60,6 @@ export function OrderManagement() {
       'orders.csv'
     );
     toast.success('Orders exported to CSV');
-  };
-
-  const handleStatusChange = async (id: string, status: MainSiteOrderStatus) => {
-    const res = await updateStatus(id, status);
-    if (!res.ok) toast.error(res.message);
-    else toast.success('Status updated');
   };
 
   return (
@@ -120,8 +106,7 @@ export function OrderManagement() {
                   <TableHead>Amount</TableHead>
                   <TableHead>Fee</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Update</TableHead>
+                  <TableHead className="pr-6">Created</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -138,22 +123,12 @@ export function OrderManagement() {
                     <TableCell>{formatBDT(o.amount)}</TableCell>
                     <TableCell className="text-muted-foreground">{formatBDT(o.platformFee)}</TableCell>
                     <TableCell><RealOrderStatusBadge status={o.status} /></TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{formatDateTime(o.createdAt)}</TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <Select value={o.status} onValueChange={(v) => handleStatusChange(o.id, v as MainSiteOrderStatus)}>
-                        <SelectTrigger className="h-8 w-[130px]"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {STATUSES.map((s) => (
-                            <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
+                    <TableCell className="pr-6 text-xs text-muted-foreground">{formatDateTime(o.createdAt)}</TableCell>
                   </TableRow>
                 ))}
                 {filtered.length === 0 && !loading && (
                   <TableRow>
-                    <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
                       {loading ? 'Loading…' : 'No orders found.'}
                     </TableCell>
                   </TableRow>
