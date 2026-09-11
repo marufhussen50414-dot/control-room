@@ -9,6 +9,15 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { stepLabel } from '@/lib/workflow';
+import { WorkflowRoadmap } from '@/components/workflow-roadmap';
+
+function RoadmapPreview({ targetStep }: { targetStep: number }) {
+  return (
+    <div className="animate-in fade-in-0 slide-in-from-top-2 zoom-in-95 rounded-lg border bg-muted/20 p-4 duration-300">
+      <WorkflowRoadmap role="seller" currentStep={targetStep} onNodeClick={() => {}} />
+    </div>
+  );
+}
 
 export function ForwardConfirmDialog({
   open,
@@ -28,10 +37,11 @@ export function ForwardConfirmDialog({
           <DialogTitle>এই স্টেপের কাজ শেষ?</DialogTitle>
           <DialogDescription>
             {targetStep
-              ? `কনফার্ম করলে অর্ডারটি Step ${targetStep}: ${stepLabel(targetStep, 'seller')} সেকশনে চলে যাবে। সেখানেও এই একই রোডম্যাপ দেখতে পারবেন।`
+              ? `কনফার্ম করলে অর্ডারটি Step ${targetStep}: ${stepLabel(targetStep, 'seller')} সেকশনে চলে যাবে।`
               : ''}
           </DialogDescription>
         </DialogHeader>
+        {targetStep && <RoadmapPreview targetStep={targetStep} />}
         <DialogFooter>
           <Button variant="outline" onClick={onCancel}>এখনই না</Button>
           <Button onClick={onConfirm}>কনফার্ম করুন</Button>
@@ -73,6 +83,8 @@ export function BackwardWarningDialog({
               : ''}
           </DialogDescription>
         </DialogHeader>
+
+        {targetStep && <RoadmapPreview targetStep={targetStep} />}
 
         <div className="space-y-4 py-2">
           <RadioGroup value={ack ? 'yes' : ''} onValueChange={(v) => setAck(v === 'yes')}>
