@@ -54,11 +54,11 @@ export function WorkflowPanel({
   return (
     <Card className={isBuyer ? 'border-blue-200 dark:border-blue-500/20' : 'border-emerald-200 dark:border-emerald-500/20'}>
       <CardContent className="space-y-4 p-5">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <p className={cn('text-xs font-semibold uppercase tracking-wide', isBuyer ? 'text-blue-700 dark:text-blue-400' : 'text-emerald-700 dark:text-emerald-400')}>
             {isBuyer ? 'Buyer Dashboard' : 'Seller Dashboard'}
           </p>
-          <Badge variant="outline" className={cn('font-medium', TONE_CLASSNAMES[currentOption.tone])}>
+          <Badge variant="outline" className={cn('shrink-0 whitespace-nowrap font-medium', TONE_CLASSNAMES[currentOption.tone])}>
             {statusLabel(status, role)}
           </Badge>
         </div>
