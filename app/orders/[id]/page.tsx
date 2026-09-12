@@ -191,7 +191,7 @@ function OrderDetailContent() {
           <p className="mt-1 text-sm text-muted-foreground">{order.accountTitle}</p>
         </div>
         <div className="flex items-center gap-3">
-          <RealOrderStatusBadge status={order.status} />
+          <RealOrderStatusBadge status={order.status} workflowStatus={order.workflowStatus} workflowCompletedAt={order.workflowCompletedAt} />
         </div>
       </div>
 
