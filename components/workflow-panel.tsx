@@ -63,7 +63,7 @@ export function WorkflowPanel({
           </Badge>
         </div>
 
-        <WorkflowRoadmap role={role} currentStep={currentStep.step} onNodeClick={onRequestStepClick} />
+        <WorkflowRoadmap role={role} currentStep={currentStep.step} onNodeClick={onRequestStepClick} isOrderComplete={status === 'step5_released'} />
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1">

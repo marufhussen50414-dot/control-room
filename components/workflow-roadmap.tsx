@@ -8,17 +8,21 @@ export function WorkflowRoadmap({
   role,
   currentStep,
   onNodeClick,
+  isOrderComplete,
 }: {
   role: WorkflowRole;
   currentStep: number;
   onNodeClick: (step: number) => void;
+  // true once the order has reached its final "released" status — the last
+  // node should show as a finished green check, not an in-progress blue dot.
+  isOrderComplete?: boolean;
 }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center">
         {WORKFLOW_STEPS.map((s, i) => {
-          const isDone = s.step < currentStep;
-          const isCurrent = s.step === currentStep;
+          const isDone = s.step < currentStep || (isOrderComplete === true && s.step === currentStep);
+          const isCurrent = s.step === currentStep && !isDone;
           const isLast = i === WORKFLOW_STEPS.length - 1;
           return (
             <div key={s.step} className={cn('flex items-center', !isLast && 'flex-1')}>
