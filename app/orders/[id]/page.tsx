@@ -8,10 +8,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RealOrderStatusBadge } from '@/components/real-order-status-badge';
 import { WorkflowPanel } from '@/components/workflow-panel';
-import { ForwardConfirmDialog, BackwardWarningDialog } from '@/components/workflow-transition-dialogs';
+import { ForwardConfirmDialog, BackwardWarningDialog, StatusConfirmDialog } from '@/components/workflow-transition-dialogs';
 import { useRealOrders } from '@/lib/use-real-orders';
 import { formatBDT, formatDateTime } from '@/lib/format';
-import { getStepDef, canAdvanceFromStatus, firstStatusOfStep, type WorkflowStatus } from '@/lib/workflow';
+import { getStepDef, canAdvanceFromStatus, firstStatusOfStep, type WorkflowRole, type WorkflowStatus } from '@/lib/workflow';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -85,6 +85,7 @@ function OrderDetailContent() {
 
   const [forwardTarget, setForwardTarget] = React.useState<number | null>(null);
   const [backwardTarget, setBackwardTarget] = React.useState<number | null>(null);
+  const [statusTarget, setStatusTarget] = React.useState<{ role: WorkflowRole; status: WorkflowStatus } | null>(null);
 
   const applyStatus = async (status: WorkflowStatus, note?: string) => {
     const res = await updateWorkflowStatus(id, status, note);
@@ -92,9 +93,18 @@ function OrderDetailContent() {
     else toast.success('Status updated');
   };
 
-  const handleRequestStatusChange = (newStatus: WorkflowStatus) => {
+  const handleRequestStatusChange = (newStatus: WorkflowStatus, role: WorkflowRole) => {
     if (!order || newStatus === order.workflowStatus) return;
-    applyStatus(newStatus);
+    setStatusTarget({ role, status: newStatus });
+  };
+
+  const confirmStatus = () => {
+    if (statusTarget) applyStatus(statusTarget.status);
+    setStatusTarget(null);
+  };
+
+  const cancelStatus = () => {
+    setStatusTarget(null);
   };
 
   const handleRequestStepClick = (targetStep: number) => {
@@ -162,6 +172,13 @@ function OrderDetailContent() {
         onConfirm={confirmBackward}
         onCancel={() => setBackwardTarget(null)}
       />
+      <StatusConfirmDialog
+        open={!!statusTarget}
+        role={statusTarget?.role ?? 'seller'}
+        newStatus={statusTarget?.status ?? null}
+        onConfirm={confirmStatus}
+        onCancel={cancelStatus}
+      />
 
       <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -182,13 +199,13 @@ function OrderDetailContent() {
         <WorkflowPanel
           role="buyer"
           status={order.workflowStatus}
-          onRequestStatusChange={handleRequestStatusChange}
+          onRequestStatusChange={(s) => handleRequestStatusChange(s, 'buyer')}
           onRequestStepClick={handleRequestStepClick}
         />
         <WorkflowPanel
           role="seller"
           status={order.workflowStatus}
-          onRequestStatusChange={handleRequestStatusChange}
+          onRequestStatusChange={(s) => handleRequestStatusChange(s, 'seller')}
           onRequestStepClick={handleRequestStepClick}
         />
       </div>
