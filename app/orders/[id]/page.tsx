@@ -11,7 +11,7 @@ import { WorkflowPanel } from '@/components/workflow-panel';
 import { ForwardConfirmDialog, BackwardWarningDialog, StatusConfirmDialog } from '@/components/workflow-transition-dialogs';
 import { useRealOrders } from '@/lib/use-real-orders';
 import { formatBDT, formatDateTime } from '@/lib/format';
-import { getStepDef, canAdvanceFromStatus, firstStatusOfStep, type WorkflowRole, type WorkflowStatus } from '@/lib/workflow';
+import { getStepDef, canAdvanceFromStatus, firstStatusOfStep, stepLabel, type WorkflowRole, type WorkflowStatus } from '@/lib/workflow';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -135,7 +135,7 @@ function OrderDetailContent() {
 
   const confirmBackward = (reason: string) => {
     if (backwardTarget) {
-      applyStatus(firstStatusOfStep(backwardTarget), `Moved back to Step ${backwardTarget}. Reason: ${reason}`);
+      applyStatus(firstStatusOfStep(backwardTarget), `Moved back to "${stepLabel(backwardTarget, 'seller')}". Reason: ${reason}`);
     }
     setBackwardTarget(null);
   };
