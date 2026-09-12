@@ -65,9 +65,20 @@ function OrderCard({ order, onClick }: { order: RealOrder; onClick: () => void }
       <CardContent className="space-y-3 p-4">
         <div className="flex items-center justify-between gap-2">
           <span className="font-semibold">#{order.shortId}</span>
-          <Badge variant="outline" className={cn('shrink-0 whitespace-nowrap font-medium', TONE_CLASSNAMES[option.tone])}>
-            {statusLabel(order.workflowStatus, 'buyer')}
-          </Badge>
+          {order.workflowStatus === 'step5_released' && order.workflowCompletedAt ? (
+            <div className="flex shrink-0 flex-col items-end gap-0.5">
+              <Badge variant="outline" className={cn('whitespace-nowrap font-medium', TONE_CLASSNAMES[option.tone])}>
+                Completed
+              </Badge>
+              <span className="text-[10px] text-muted-foreground">
+                History in {Math.max(0, Math.ceil(72 - (Date.now() - new Date(order.workflowCompletedAt).getTime()) / 3600000))}h
+              </span>
+            </div>
+          ) : (
+            <Badge variant="outline" className={cn('shrink-0 whitespace-nowrap font-medium', TONE_CLASSNAMES[option.tone])}>
+              {statusLabel(order.workflowStatus, 'buyer')}
+            </Badge>
+          )}
         </div>
 
         <p className="truncate text-sm font-medium" title={order.accountTitle}>{order.accountTitle}</p>
