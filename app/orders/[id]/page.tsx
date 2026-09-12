@@ -218,7 +218,7 @@ function OrderDetailContent() {
       <Card>
         <CardContent className="p-5">
           <h3 className="mb-2 font-semibold">Order Details</h3>
-          <Row label="Order ID" value={order.id} />
+          <Row label="Order ID" value={order.shortId} />
           <Row label="Account / Listing" value={order.accountTitle} />
           <Row label="Game" value={order.gameName} />
           <Row label="Price" value={formatBDT(order.amount)} />
