@@ -2,15 +2,13 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Download, RefreshCw } from 'lucide-react';
+import { Search, Download, RefreshCw, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { useRealOrders } from '@/lib/use-real-orders';
+import { useRealOrders, type RealOrder } from '@/lib/use-real-orders';
 import { formatBDT } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { getStepDef, getStatusOption, stepLabel, statusLabel, TONE_CLASSNAMES } from '@/lib/workflow';
@@ -38,6 +36,62 @@ function exportCSV(rows: Record<string, unknown>[], filename: string) {
   URL.revokeObjectURL(url);
 }
 
+function OrderCardSkeleton() {
+  return (
+    <Card>
+      <CardContent className="space-y-3 p-4">
+        <div className="flex items-center justify-between gap-2">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-5 w-20 rounded-full" />
+        </div>
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3.5 w-1/2" />
+        <div className="flex items-center justify-between border-t pt-3">
+          <Skeleton className="h-4 w-14" />
+          <Skeleton className="h-3.5 w-24" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function OrderCard({ order, onClick }: { order: RealOrder; onClick: () => void }) {
+  const option = getStatusOption(order.workflowStatus);
+  return (
+    <Card
+      onClick={onClick}
+      className="group cursor-pointer transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+    >
+      <CardContent className="space-y-3 p-4">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-semibold">#{order.shortId}</span>
+          <Badge variant="outline" className={cn('shrink-0 whitespace-nowrap font-medium', TONE_CLASSNAMES[option.tone])}>
+            {statusLabel(order.workflowStatus, 'buyer')}
+          </Badge>
+        </div>
+
+        <p className="truncate text-sm font-medium" title={order.accountTitle}>{order.accountTitle}</p>
+
+        <div className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+          <span className="truncate">{order.buyerLabel}</span>
+          <ArrowRight className="h-3 w-3 shrink-0" />
+          <span className="truncate">{order.sellerLabel}</span>
+        </div>
+
+        <div className="flex items-end justify-between border-t pt-3">
+          <div>
+            <p className="font-semibold leading-none">{formatBDT(order.amount)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Fee {formatBDT(order.platformFee)}</p>
+          </div>
+          <p className="text-xs text-muted-foreground transition-colors group-hover:text-foreground">
+            {stepLabel(getStepDef(order.workflowStatus).step, 'buyer')}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function OrderManagement() {
   const router = useRouter();
   const { orders, loading, loadError, refresh } = useRealOrders();
@@ -51,6 +105,11 @@ export function OrderManagement() {
       o.buyerLabel.toLowerCase().includes(q) ||
       o.sellerLabel.toLowerCase().includes(q)
   );
+
+  // Only show the full skeleton grid on the very first load (no data yet).
+  // A background refresh (loading again with data already on screen) should
+  // never wipe the list — the Refresh button's own spin icon is enough there.
+  const isInitialLoading = loading && orders.length === 0 && !loadError;
 
   const handleExport = () => {
     exportCSV(
@@ -97,57 +156,23 @@ export function OrderManagement() {
 
       {loadError && <p className="text-sm text-destructive">Failed to load orders: {loadError}</p>}
 
-      <Card>
-        <CardContent className="px-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="pl-6">Order ID</TableHead>
-                  <TableHead>Buyer</TableHead>
-                  <TableHead>Seller</TableHead>
-                  <TableHead>Account</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Fee</TableHead>
-                  <TableHead>Step</TableHead>
-                  <TableHead className="pr-6">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((o) => (
-                  <TableRow
-                    key={o.id}
-                    className="cursor-pointer"
-                    onClick={() => router.push(`/orders/${o.id}`)}
-                  >
-                    <TableCell className="pl-6 font-medium">#{o.shortId}</TableCell>
-                    <TableCell className="text-muted-foreground">{o.buyerLabel}</TableCell>
-                    <TableCell className="text-muted-foreground">{o.sellerLabel}</TableCell>
-                    <TableCell className="max-w-[180px] truncate text-muted-foreground">{o.accountTitle}</TableCell>
-                    <TableCell>{formatBDT(o.amount)}</TableCell>
-                    <TableCell className="text-muted-foreground">{formatBDT(o.platformFee)}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {stepLabel(getStepDef(o.workflowStatus).step, 'buyer')}
-                    </TableCell>
-                    <TableCell className="pr-6">
-                      <Badge variant="outline" className={cn('font-medium', TONE_CLASSNAMES[getStatusOption(o.workflowStatus).tone])}>
-                        {statusLabel(o.workflowStatus, 'buyer')}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filtered.length === 0 && !loading && (
-                  <TableRow>
-                    <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
-                      {loading ? 'Loading…' : 'No orders found.'}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      {isInitialLoading ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => <OrderCardSkeleton key={i} />)}
+        </div>
+      ) : filtered.length === 0 ? (
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            No orders found.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((o) => (
+            <OrderCard key={o.id} order={o} onClick={() => router.push(`/orders/${o.id}`)} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
