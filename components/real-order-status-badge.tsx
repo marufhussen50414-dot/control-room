@@ -42,9 +42,28 @@ const FALLBACK = { label: 'Unknown', className: 'bg-muted text-muted-foreground'
 
 export function RealOrderStatusBadge({
   status,
+  workflowStatus,
+  workflowCompletedAt,
 }: {
   status: MainSiteOrderStatus | string | null | undefined;
+  workflowStatus?: string | null;
+  workflowCompletedAt?: string | null;
 }) {
+  if (workflowStatus === 'step5_released') {
+    const hoursLeft = workflowCompletedAt
+      ? Math.max(0, Math.ceil(72 - (Date.now() - new Date(workflowCompletedAt).getTime()) / 3600000))
+      : null;
+    return (
+      <div className="flex flex-col items-start gap-0.5">
+        <Badge variant="outline" className={cn('font-medium', MAP.completed.className)}>
+          Completed
+        </Badge>
+        {hoursLeft !== null && (
+          <span className="text-[10px] text-muted-foreground">History in {hoursLeft}h</span>
+        )}
+      </div>
+    );
+  }
   const normalized = String(status ?? '').toLowerCase() as MainSiteOrderStatus;
   const cfg = MAP[normalized] ?? FALLBACK;
   return (
