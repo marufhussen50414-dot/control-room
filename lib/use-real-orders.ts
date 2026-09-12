@@ -14,6 +14,7 @@ export type RealOrder = {
   platformFee: number;
   status: MainSiteOrderStatus;
   workflowStatus: WorkflowStatus;
+  workflowCompletedAt: string | null;
   escrowLocked: boolean;
   escrowDeadline: string | null;
   createdAt: string;
@@ -49,7 +50,7 @@ function toShortId(id: string) {
 function mapOrder(o: MainSiteOrder): RealOrder {
   return {
     id: o.id,
-    shortId: toShortId(o.id),
+    shortId: o.order_number || toShortId(o.id),
     buyerLabel: o.buyer?.full_name || o.buyer?.username || o.buyer_id.slice(0, 8),
     sellerLabel: o.seller?.full_name || o.seller?.username || o.seller_id.slice(0, 8),
     accountTitle: o.game_listings?.title ?? 'Listing',
@@ -57,6 +58,7 @@ function mapOrder(o: MainSiteOrder): RealOrder {
     platformFee: o.commission_amount,
     status: o.status,
     workflowStatus: normalizeWorkflowStatus(o.workflow_status),
+    workflowCompletedAt: o.workflow_completed_at,
     escrowLocked: !o.escrow_released && ['paid', 'delivering', 'disputed'].includes(o.status),
     escrowDeadline: o.buyer_confirm_deadline,
     createdAt: o.created_at,
@@ -147,7 +149,13 @@ export function useRealOrders() {
 
   const updateWorkflowStatus = React.useCallback(
     async (id: string, workflowStatus: WorkflowStatus, note?: string) => {
-      const patch: Record<string, unknown> = { workflow_status: workflowStatus };
+      const patch: Record<string, unknown> = {
+        workflow_status: workflowStatus,
+        // Stamped the moment the order reaches the final "released" status —
+        // this drives the 72h grace window before it moves to order history
+        // on the main site. Cleared if it's ever moved back off that status.
+        workflow_completed_at: workflowStatus === 'step5_released' ? new Date().toISOString() : null,
+      };
       if (note) {
         const order = orders.find((o) => o.id === id);
         const stamp = new Date().toLocaleString();
@@ -159,7 +167,12 @@ export function useRealOrders() {
         setOrders((prev) =>
           prev.map((o) =>
             o.id === id
-              ? { ...o, workflowStatus, adminNotes: (patch.admin_notes as string) ?? o.adminNotes }
+              ? {
+                  ...o,
+                  workflowStatus,
+                  workflowCompletedAt: patch.workflow_completed_at as string | null,
+                  adminNotes: (patch.admin_notes as string) ?? o.adminNotes,
+                }
               : o
           )
         );

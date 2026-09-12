@@ -70,6 +70,12 @@ export type MainSiteOrder = {
   // Buyer/Seller roadmap progress. One shared value — see lib/workflow.ts.
   // Nullable so existing rows created before this column existed still load.
   workflow_status: string | null;
+  // Set automatically the moment workflow_status becomes 'step5_released'.
+  // Drives the 72-hour "still visible on the main site" grace window.
+  workflow_completed_at: string | null;
+  // Fixed, permanent, human-friendly order code (10 chars). Generated once
+  // by a DB trigger on insert — never regenerated, always unique.
+  order_number: string;
   // Joined in via foreign-table select, not a real column.
   buyer?: { username: string | null; full_name: string; phone: string | null; whatsapp: string | null; email?: string } | null;
   seller?: { username: string | null; full_name: string; phone: string | null; whatsapp: string | null; email?: string } | null;
