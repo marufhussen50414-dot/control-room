@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { stepLabel } from '@/lib/workflow';
+import { stepLabel, statusLabel, type WorkflowRole, type WorkflowStatus } from '@/lib/workflow';
 import { WorkflowRoadmap } from '@/components/workflow-roadmap';
 
 function RoadmapPreview({ targetStep }: { targetStep: number }) {
@@ -16,6 +16,37 @@ function RoadmapPreview({ targetStep }: { targetStep: number }) {
     <div className="animate-in fade-in-0 slide-in-from-top-3 zoom-in-95 ease-out rounded-lg border bg-muted/20 p-4 duration-500 delay-150 fill-mode-both">
       <WorkflowRoadmap role="seller" currentStep={targetStep} onNodeClick={() => {}} />
     </div>
+  );
+}
+
+export function StatusConfirmDialog({
+  open,
+  role,
+  newStatus,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  role: WorkflowRole;
+  newStatus: WorkflowStatus | null;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onCancel()}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Change status?</DialogTitle>
+          <DialogDescription>
+            {newStatus ? `Set status to "${statusLabel(newStatus, role)}".` : ''}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button onClick={onConfirm}>Confirm</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

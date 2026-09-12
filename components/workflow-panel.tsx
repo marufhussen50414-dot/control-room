@@ -16,7 +16,25 @@ import {
   type WorkflowRole,
   type WorkflowStatus,
 } from '@/lib/workflow';
+import { Check } from 'lucide-react';
 import { WorkflowRoadmap } from '@/components/workflow-roadmap';
+
+function StepDot({ step, currentStep }: { step: number; currentStep: number }) {
+  const isDone = step < currentStep;
+  const isCurrent = step === currentStep;
+  return (
+    <span
+      className={cn(
+        'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold',
+        isDone && 'bg-emerald-500 text-white',
+        isCurrent && 'bg-blue-500 text-white ring-4 ring-blue-500/20',
+        !isDone && !isCurrent && 'bg-muted text-muted-foreground'
+      )}
+    >
+      {isDone ? <Check className="h-3 w-3" /> : step}
+    </span>
+  );
+}
 
 export function WorkflowPanel({
   role,
@@ -55,7 +73,10 @@ export function WorkflowPanel({
               <SelectContent>
                 {WORKFLOW_STEPS.map((s) => (
                   <SelectItem key={s.step} value={String(s.step)}>
-                    {`Step ${s.step}: ${stepLabel(s.step, role)}`}
+                    <div className="flex items-center gap-2">
+                      <StepDot step={s.step} currentStep={currentStep.step} />
+                      <span>{`Step ${s.step}: ${stepLabel(s.step, role)}`}</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
