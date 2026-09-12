@@ -83,7 +83,7 @@ export const WORKFLOW_STEPS: WorkflowStepDef[] = [
   {
     step: 5,
     sellerLabel: 'Payout Status',
-    buyerLabel: 'Payment Processing',
+    buyerLabel: 'Payment Status',
     statuses: [
       { code: 'step5_processing', sellerLabel: 'Processing', buyerLabel: 'Processing', tone: 'neutral', advances: false },
       { code: 'step5_released', sellerLabel: 'Released to Wallet', buyerLabel: 'Released to Seller', tone: 'success', advances: true },
