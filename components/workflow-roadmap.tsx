@@ -48,7 +48,7 @@ export function WorkflowRoadmap({
         })}
       </div>
       <p className="text-center text-xs font-medium text-muted-foreground">
-        {`Step ${currentStep}: ${stepLabel(currentStep, role)}`}
+        {stepLabel(currentStep, role)}
       </p>
     </div>
   );

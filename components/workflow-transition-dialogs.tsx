@@ -68,7 +68,7 @@ export function ForwardConfirmDialog({
           <DialogTitle>Is this step done?</DialogTitle>
           <DialogDescription>
             {targetStep
-              ? `Confirming will move this order to Step ${targetStep}: ${stepLabel(targetStep, 'seller')}.`
+              ? `Confirming will move this order to "${stepLabel(targetStep, 'seller')}".`
               : ''}
           </DialogDescription>
         </DialogHeader>
@@ -110,7 +110,7 @@ export function BackwardWarningDialog({
           <DialogTitle className="text-amber-600 dark:text-amber-400">⚠️ You're moving this order backward</DialogTitle>
           <DialogDescription>
             {targetStep
-              ? `This order will be moved back to Step ${targetStep}: ${stepLabel(targetStep, 'seller')}. Please confirm this is intentional.`
+              ? `This order will be moved back to "${stepLabel(targetStep, 'seller')}". Please confirm this is intentional.`
               : ''}
           </DialogDescription>
         </DialogHeader>

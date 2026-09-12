@@ -65,17 +65,19 @@ export function WorkflowPanel({
 
         <WorkflowRoadmap role={role} currentStep={currentStep.step} onNodeClick={onRequestStepClick} />
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Step</p>
             <Select value={String(currentStep.step)} onValueChange={(v) => onRequestStepClick(Number(v))}>
-              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-auto min-h-9 items-start gap-1.5 whitespace-normal py-2 text-left [&>span]:line-clamp-none [&>span]:whitespace-normal">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {WORKFLOW_STEPS.map((s) => (
                   <SelectItem key={s.step} value={String(s.step)}>
                     <div className="flex items-center gap-2">
                       <StepDot step={s.step} currentStep={currentStep.step} />
-                      <span>{`Step ${s.step}: ${stepLabel(s.step, role)}`}</span>
+                      <span>{stepLabel(s.step, role)}</span>
                     </div>
                   </SelectItem>
                 ))}
