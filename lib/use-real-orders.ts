@@ -21,6 +21,8 @@ export type RealOrder = {
   // নিচের ফিল্ডগুলো শুধু detail পেজে ব্যবহার হয়, টেবিলে না
   buyerId: string;
   sellerId: string;
+  buyerProfileId: string | null;
+  sellerProfileId: string | null;
   buyerEmail: string;
   sellerEmail: string;
   buyerPhone: string | null;
@@ -64,6 +66,8 @@ function mapOrder(o: MainSiteOrder): RealOrder {
     createdAt: o.created_at,
     buyerId: o.buyer_id,
     sellerId: o.seller_id,
+    buyerProfileId: o.buyer?.profile_id ?? null,
+    sellerProfileId: o.seller?.profile_id ?? null,
     buyerEmail: o.buyer?.email ?? '',
     sellerEmail: o.seller?.email ?? '',
     buyerPhone: o.buyer?.phone ?? null,

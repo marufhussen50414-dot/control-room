@@ -5,6 +5,11 @@
 
 export type MainSiteProfile = {
   id: string;
+  // Fixed, permanent, human-friendly profile code (format "U-XXXXXXXX").
+  // Generated once by a DB trigger — never regenerated, always unique.
+  // Deliberately shaped differently from order_number so the two can never
+  // be confused for one another.
+  profile_id: string;
   username: string | null;
   full_name: string;
   phone: string | null;
@@ -77,7 +82,7 @@ export type MainSiteOrder = {
   // by a DB trigger on insert — never regenerated, always unique.
   order_number: string;
   // Joined in via foreign-table select, not a real column.
-  buyer?: { username: string | null; full_name: string; phone: string | null; whatsapp: string | null; email?: string } | null;
-  seller?: { username: string | null; full_name: string; phone: string | null; whatsapp: string | null; email?: string } | null;
+  buyer?: { profile_id: string | null; username: string | null; full_name: string; phone: string | null; whatsapp: string | null; email?: string } | null;
+  seller?: { profile_id: string | null; username: string | null; full_name: string; phone: string | null; whatsapp: string | null; email?: string } | null;
   game_listings?: { title: string; game_name: string } | null;
 };
