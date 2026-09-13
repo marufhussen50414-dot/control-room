@@ -5,7 +5,7 @@ export async function GET() {
   const { data: orders, error } = await boltAdmin
     .from('orders')
     .select(
-      '*, buyer:buyer_id(username, full_name, phone, whatsapp), seller:seller_id(username, full_name, phone, whatsapp), game_listings(title, game_name)'
+      '*, buyer:buyer_id(profile_id, username, full_name, phone, whatsapp), seller:seller_id(profile_id, username, full_name, phone, whatsapp), game_listings(title, game_name)'
     )
     .order('created_at', { ascending: false })
 
