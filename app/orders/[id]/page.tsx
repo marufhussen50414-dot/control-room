@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSection } from '@/lib/section-context';
-import { ArrowLeft, User as UserIcon, Store, Phone, Mail, MessageCircle, Play } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Store, Phone, Mail, MessageCircle, Play, BadgeCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RealOrderStatusBadge } from '@/components/real-order-status-badge';
@@ -30,9 +30,9 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 function PartyCard({
-  role, name, email, phone, whatsapp,
+  role, name, email, phone, whatsapp, profileId,
 }: {
-  role: 'Buyer' | 'Seller'; name: string; email: string; phone: string | null; whatsapp: string | null;
+  role: 'Buyer' | 'Seller'; name: string; email: string; phone: string | null; whatsapp: string | null; profileId: string | null;
 }) {
   const isBuyer = role === 'Buyer';
   return (
@@ -58,6 +58,10 @@ function PartyCard({
           </div>
         </div>
         <div className="space-y-1.5 text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <BadgeCheck className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate font-mono">{profileId || '—'}</span>
+          </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Mail className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{email || '—'}</span>
@@ -211,8 +215,8 @@ function OrderDetailContent() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <PartyCard role="Buyer" name={order.buyerLabel} email={order.buyerEmail} phone={order.buyerPhone} whatsapp={order.buyerWhatsapp} />
-        <PartyCard role="Seller" name={order.sellerLabel} email={order.sellerEmail} phone={order.sellerPhone} whatsapp={order.sellerWhatsapp} />
+        <PartyCard role="Buyer" name={order.buyerLabel} email={order.buyerEmail} phone={order.buyerPhone} whatsapp={order.buyerWhatsapp} profileId={order.buyerProfileId} />
+        <PartyCard role="Seller" name={order.sellerLabel} email={order.sellerEmail} phone={order.sellerPhone} whatsapp={order.sellerWhatsapp} profileId={order.sellerProfileId} />
       </div>
 
       <Card>
