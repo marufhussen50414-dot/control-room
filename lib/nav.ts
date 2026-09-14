@@ -9,6 +9,7 @@ import {
   Settings,
   ScrollText,
   Lock,
+  BadgeCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -20,6 +21,7 @@ export const NAV_ITEMS: {
 }[] = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'orders', label: 'Order Management', icon: Package },
+  { key: 'paymentConfirm', label: 'Payment Confirmation', icon: BadgeCheck },
   { key: 'activeEscrows', label: 'Active Escrows', icon: Lock },
   { key: 'disputes', label: 'Disputes & Reports', icon: Gavel },
   { key: 'payouts', label: 'Payout Management', icon: Wallet },

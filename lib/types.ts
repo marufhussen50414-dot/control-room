@@ -4,6 +4,7 @@ export type SectionKey =
   | 'dashboard'
   | 'orders'
   | 'activeEscrows'
+  | 'paymentConfirm'
   | 'disputes'
   | 'payouts'
   | 'finance'
