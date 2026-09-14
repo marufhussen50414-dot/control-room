@@ -16,6 +16,7 @@ import { Members } from '@/components/sections/members';
 import { AccountSettings } from '@/components/sections/account';
 import { AuditLog } from '@/components/sections/audit';
 import { ActiveEscrows } from '@/components/sections/active-escrows';
+import { PaymentConfirmations } from '@/components/sections/payment-confirmations';
 import type { SectionKey } from '@/lib/types';
 
 // Used to hand off "go to this section" across a real page navigation —
@@ -74,6 +75,8 @@ export function AppShell({
         return <OrderManagement />;
       case 'activeEscrows':
         return <ActiveEscrows />;
+      case 'paymentConfirm':
+        return <PaymentConfirmations />;
       case 'disputes':
         return <DisputesReportsView />;
       case 'payouts':
